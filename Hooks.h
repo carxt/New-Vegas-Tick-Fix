@@ -1,4 +1,9 @@
 #pragma once
+char* movzxEaxECXplus4 = "\x0F\xB6\x41\x04\xC3";
+char* leaEaxEcxPlus4 = "\x8D\x41\x04\xC3"; // lea eax, [ecx+4] ; ret
+
+
+#pragma once
 DWORD __fastcall HookHotSpot1(DWORD** ecx)
 {
 	DWORD MaxCount = (DWORD)ecx[0x13];
@@ -24,14 +29,6 @@ __declspec (naked) void HookCSDebug()
 	}
 }
 
-__declspec (naked) void OurFastcall()
-{
-	__asm
-	{
-		movsx eax, cx
-		ret
-	}
-}
 __declspec (naked) void FastTESMobile_GETBASEPROCESS()
 {
 	__asm
@@ -40,22 +37,7 @@ __declspec (naked) void FastTESMobile_GETBASEPROCESS()
 		ret
 	}
 }
-__declspec (naked) void FastGetThis0x28()
-{
-	__asm
-	{
-		mov eax, dword ptr ds : [ecx + 0x28]
-		ret
-	}
-}
-__declspec (naked) void FastGetThis0x8()
-{
-	__asm
-	{
-		mov eax, dword ptr ds : [ecx + 0x8]
-		ret
-	}
-}
+
 __declspec (naked) void FaceGenDataGetSelfDereferenceTwice()
 {
 	__asm
@@ -75,33 +57,6 @@ __declspec (naked) void Inline576D30()
 	{
 		mov ecx, [ecx + 8]
 		and ecx, 0x200000
-		setnz al
-		ret
-	}
-}
-
-__declspec (naked) void FastDereference()
-{
-	__asm
-	{
-		test ecx, ecx
-		jz done
-		mov eax, [ecx]
-	done:
-		ret
-	}
-}
-
-__declspec (naked) void FastThisAndThis_4Check()
-{
-	__asm
-	{
-		mov eax, [ecx]
-		test eax, eax
-		jz done
-		mov eax, [ecx + 4]
-		test eax, eax
-	done:
 		setnz al
 		ret
 	}
@@ -160,10 +115,6 @@ float __fastcall Hook595C80(float* ecx)
 	return *ecx * *ecx + ecx[1] * ecx[1];
 }
 
-bool __fastcall DereferenceNotNull(UInt32* ecx) {
-	return (*ecx != 0);
-}
-
 float* __fastcall Hook416870(float* ecx, void* edx, float a2, float a3, float a4)
 {
 	*ecx = a2;
@@ -200,7 +151,6 @@ unsigned int** __fastcall NiTMapBase_FreeBuckets(unsigned int** ecx)
 	}
 	ecx[3] = 0;
 	return ecx;
-
 }
 
 DWORD __cdecl ObsidianIsRetardedHook(DWORD a1, int a2)
@@ -251,12 +201,6 @@ unsigned int __fastcall TESTopic_getTopicInfoByID(DWORD ecx, DWORD edx, int a2, 
 		}
 	}
 	return 0;
-}
-
-int __fastcall HookA59E00(unsigned int* ecx, void* edx, unsigned int* a2)
-{
-
-	return (!(ecx[12] & 1)) ? (*(int(__thiscall * *)(unsigned int*, unsigned int*))(*a2 + 0x44))(a2, ecx) : 0;
 }
 
 void HookInlines() {
