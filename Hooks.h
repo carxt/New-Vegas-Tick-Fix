@@ -1,40 +1,7 @@
 #pragma once
+char* movzxEaxECXplus4 = "\x0F\xB6\x41\x04\xC3";
+char* leaEaxEcxPlus4 = "\x8D\x41\x04\xC3"; // lea eax, [ecx+4] ; ret
 
-UInt32 GetInit = 0;
-/*
-int __cdecl zlib_inflate_init_hook(void* stream, const char* a2, int stream_size)
-{
-	return ((int(__stdcall*)(void*, int, const char*, int))(GetInit))(stream, 15, "1.2.11", stream_size);
-}
-
-void HookZLib()
-{
-	HMODULE zlibdll = LoadLibrary("zlibwapi.dll");
-
-
-	if (!zlibdll)
-	{
-		_MESSAGE("zlib dll not found");
-	}
-	else {
-		GetInit  = (DWORD)GetProcAddress(zlibdll, "inflateInit2_");
-		UInt32  GetInflate = (DWORD)GetProcAddress(zlibdll, "inflate");
-		
-		if (!GetInflate || !GetInit) { 
-			_MESSAGE("Failed to get zlib_inflate or zlib_init");
-			FreeLibrary(zlibdll);
-			 }
-		else{
-			WriteRelCall(0x47434F, GetInflate);
-			SafeWriteBuf(0x474354, "\x90\x90\x90", 3);
-			WriteRelCall(0xAFC1F4, GetInflate);
-			SafeWriteBuf(0x0AFC1F9, "\x90\x90\x90", 3);
-			WriteRelCall(0x04742AC, (UInt32)zlib_inflate_init_hook);
-			WriteRelCall(0x0AFC537, (UInt32)zlib_inflate_init_hook);
-
-		}
-	}
-}*/
 DWORD __fastcall HookHotSpot1(DWORD** ecx)
 {
 	DWORD MaxCount = (DWORD)ecx[0x13];
@@ -48,67 +15,8 @@ DWORD __fastcall HookHotSpot1(DWORD** ecx)
 	}
 	return -1;
 }
-__declspec (naked) void HookCSDebug()
-{
-	static const char* dec = "0x%x";
-	{
-		__asm
-		{
-			push dec
-			call _MESSAGE
-			add esp, 4
-			jmp EnterCriticalSection
-		}
-	}
 
-}
-
-__declspec (naked) void OurFastcall()
-{
-	__asm
-	{
-		movsx eax, cx
-		ret
-	}
-}
-__declspec (naked) void FastTESMobile_GETBASEPROCESS()
-{
-	__asm
-	{
-		mov eax, dword ptr ds : [ecx + 0x68]
-		ret
-	}
-}
-__declspec (naked) void FastGetThis0x28()
-{
-	__asm
-	{
-		mov eax, dword ptr ds : [ecx + 0x28]
-		ret
-	}
-}
-__declspec (naked) void FastGetThis0x8()
-{
-	__asm
-	{
-		mov eax, dword ptr ds : [ecx + 0x8]
-		ret
-	}
-}
-__declspec (naked) void FaceGenDataGetSelfDereferenceTwice()
-{
-	__asm
-	{
-		mov eax, [ecx]
-		test eax, eax
-		jz done
-		mov eax, [eax]
-		done:
-		ret
-	}
-}
-
-__declspec (naked) void Inline576D30()
+/*__declspec (naked) void Inline576D30()
 {
 	__asm
 	{
@@ -118,47 +26,25 @@ __declspec (naked) void Inline576D30()
 		ret
 	}
 }
+*/
+char* Inline576D30 = "\x8B\x49\x08\x81\xE1\x00\x00\x20\x00\x0F\x95\xC0\xC3";
 
-__declspec (naked) void FastDereference()
+/*
+__declspec(naked) __fastcall void GetStringSetting(char* settingName)
 {
-	__asm
+	_asm
 	{
 		test ecx, ecx
-		jz done
-		mov eax, [ecx]
-		done:
+		je isNull
+		mov eax, [ecx+4]
+		ret
+	isNull:
+		xor eax, eax
 		ret
 	}
 }
-
-
-
-__declspec (naked) void FastThisAndThis_4Check()
-{
-	__asm
-	{
-		mov eax, [ecx]
-		test eax, eax
-		jz done
-		mov eax, [ecx + 4]
-		test eax, eax
-		done :
-		setnz al
-			ret
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
+*/
+char* GetStringSetting = "\x85\xC9\x74\x04\x8B\x41\x04\xC3\x31\xC0\xC3";
 
 void __fastcall InlinedA694E0(DWORD* ecx, DWORD edx, DWORD* a2)
 {
@@ -194,68 +80,69 @@ void __fastcall InlinedA694E0(DWORD* ecx, DWORD edx, DWORD* a2)
 	}
 }
 
-
-
-
-
-
-bool __fastcall StringNiMap__Lookup(int ecx, int EDX, int a1, int a2)
+bool __fastcall StringNiTMap__Lookup(int ecx, int EDX, int a1, int a2)
 {
-	int* i = *(int**)(*(DWORD*)(ecx + 8) + 4 * (*(int(__fastcall * *)(int, int, int))(*(DWORD*)ecx + 4))(ecx, 0, a1));
+	int* i = *(int**)(*(DWORD*)(ecx + 8) + 4 * (*(int(__thiscall * *)(int, int))(*(DWORD*)ecx + 4))(ecx, a1));
 	while (i) {
-		if ((*(unsigned __int8(__fastcall * *)(int, int, int, int))(*(DWORD*)ecx + 8))(ecx, 0, a1, i[1]))
+		if ((*(unsigned __int8(__thiscall * *)(int, int, int))(*(DWORD*)ecx + 8))(ecx, a1, i[1]))
 		{
 			*(DWORD*)a2 = i[2];
 			return 1;
 		}
-		i = (int*)*i;
+		i = (int*)* i;
 	}
 	return 0;
 }
 
-float __fastcall Hook595C80(float* ecx)
+/*
+float __fastcall Inline595C80(float* ecx)
 {
 	return *ecx * *ecx + ecx[1] * ecx[1];
 }
+*/
+char* Inline595C80 = "\x51\xF3\x0F\x10\x49\x04\xF3\x0F\x10\x01\xF3\x0F\x59\xC0\xF3\x0F\x59\xC9\xF3\x0F\x58\xC1\xF3\x0F\x11\x04\x24\xD9\x04\x24\x59\xC3";
 
-bool __fastcall DereferenceNotNull(UInt32* ecx) {
-	return (*ecx != 0);
-}
-
-float* __fastcall Hook416870(float* ecx, void* edx, float a2, float a3, float a4)
+/*
+float* __fastcall Inline416870(float* ecx, void* edx, float a2, float a3, float a4)
 {
 	*ecx = a2;
 	ecx[1] = a3;
 	ecx[2] = a4;
 	return ecx;
 }
+*/
+char* Inline416870 = "\xF3\x0F\x10\x44\x24\x04\x8B\xC1\xF3\x0F\x11\x01\xF3\x0F\x10\x44\x24\x08\xF3\x0F\x11\x41\x04\xF3\x0F\x10\x44\x24\x0C\xF3\x0F\x11\x41\x08\xC2\x0C\x00";
 
-
-
-float* __fastcall Hook439EF0(float* ecx, void* edx, float* a2, float* a3)
+/*
+float* __fastcall Inline439EF0(float* ecx, void* edx, float* a2, float* a3)
 {
 	*a2 = *ecx - *a3;
 	a2[1] = ecx[1] - a3[1];
 	a2[2] = ecx[2] - a3[2];
 	return a2;
 }
-/*
-int __fastcall HookA59E00(DWORD* ecx, DWORD* edx,int a2)
-{
-	int result; // eax
+*/
+char* Inline439EF0 = "\x8B\x54\x24\x08\xF3\x0F\x10\x01\x8B\x44\x24\x04\xF3\x0F\x5C\x02\xF3\x0F\x11\x00\xF3\x0F\x10\x41\x04\xF3\x0F\x5C\x42\x04\xF3\x0F\x11\x40\x04\xF3\x0F\x10\x41\x08\xF3\x0F\x5C\x42\x08\xF3\x0F\x11\x40\x08\xC2\x08\x00";
 
-	if (!(ecx[12] & 1))
-		return	(*(int(__thiscall**)(DWORD, DWORD*))((UInt32)(*(DWORD*)a2 + 0x44)))(a2, ecx);
-	 //((int (__fastcall*)(DWORD, DWORD*))(()))(a2, ecx);
-	return 0;
-}*/
+/*
+signed int __fastcall Inline49DA80(NiPoint4* p1, void* dummyEDX, NiPoint3* p2)
+{
+	float distance = (p1->x * p2->x + p1->y * p2->y + p1->z * p2->z - p1->r);
+	if (distance >= 0.0F)
+	{
+		return distance > 0.0F ? 1 : 0;
+	}
+	return 2;
+}
+*/
+char* Inline49DA80 = "\x8B\x44\x24\x04\xF3\x0F\x10\x01\xF3\x0F\x10\x49\x04\xF3\x0F\x59\x00\xF3\x0F\x59\x48\x04\xF3\x0F\x58\xC8\xF3\x0F\x10\x41\x08\xF3\x0F\x59\x40\x08\xF3\x0F\x58\xC8\x0F\x57\xC0\xF3\x0F\x5C\x49\x0C\x0F\x2F\xC8\x72\x0B\x33\xC0\x0F\x2F\xC8\x0F\x97\xC0\xC2\x04\x00\xB8\x02\x00\x00\x00\xC2\x04\x00";
 
 unsigned int** __fastcall NiTMapBase_FreeBuckets(unsigned int** ecx)
 {
 	unsigned int* v1; // ST08_4
 	unsigned int** result; // eax
 	unsigned int  i = 0; // [esp+8h] [ebp-4h]
-	unsigned int ecxplus1 = *(unsigned int*) ecx[1];
+	unsigned int ecxplus1 = *(unsigned int*)ecx[1];
 	unsigned int* ecxplus2 = ecx[2];
 
 	for (i = 0; i < (unsigned int)ecx[1]; ++i)
@@ -264,22 +151,20 @@ unsigned int** __fastcall NiTMapBase_FreeBuckets(unsigned int** ecx)
 		{
 			v1 = (unsigned int*)ecx[2][i];
 			ecx[2][i] = *(DWORD*)ecx[2][i];
-			((void(__thiscall*)(unsigned int**, unsigned int*)) (long) ((*ecx)[4]) )(ecx, v1);
-			((void(__thiscall*)(unsigned int**, unsigned int*)) (long) ((*ecx)[6]) )(ecx, v1);
+			((void(__thiscall*)(unsigned int**, unsigned int*)) (long) ((*ecx)[4]))(ecx, v1);
+			((void(__thiscall*)(unsigned int**, unsigned int*)) (long) ((*ecx)[6]))(ecx, v1);
 		}
 	}
 	ecx[3] = 0;
 	return ecx;
-
 }
 
-DWORD __cdecl ObsidianIsRetardedHook(DWORD a1, int a2)
+DWORD __cdecl TESTopic_getTopicInfoByIndex(DWORD a1, int a2)
 {
 	int* test = (int*)(a1 + 4);
 	return (a1 == 0 || (test[3] < a2)) ? 0 : *(DWORD*)(test[1] + 4 * a2);
 
 }
-
 
 unsigned int __fastcall TESTopic_getTopicInfoByID(DWORD ecx, DWORD edx, int a2, char a3)
 {
@@ -296,8 +181,8 @@ unsigned int __fastcall TESTopic_getTopicInfoByID(DWORD ecx, DWORD edx, int a2, 
 	while (v10 && *(DWORD*)v10)
 	{
 		v9 = *(char**)(v10);
-		v10 = *(void**) (((DWORD)v10) + 4);
-		v11 = *(unsigned int*) ((((DWORD)v9) + 4) + 0xC);
+		v10 = *(void**)(((DWORD)v10) + 4);
+		v11 = *(unsigned int*)((((DWORD)v9) + 4) + 0xC);
 		//v11 = *(unsigned int*) (((DWORD)v9) + 0xC);
 		if (v11)
 		{
@@ -305,7 +190,7 @@ unsigned int __fastcall TESTopic_getTopicInfoByID(DWORD ecx, DWORD edx, int a2, 
 			{
 				for (i = v11 - 1; i >= 0; --i)
 				{
-					v7 = ObsidianIsRetardedHook((DWORD)v9, i);
+					v7 = TESTopic_getTopicInfoByIndex((DWORD)v9, i);
 					if (v7 && (*(DWORD*)(v7 + 0xC)) == a2)
 						return v7;
 				}
@@ -314,7 +199,7 @@ unsigned int __fastcall TESTopic_getTopicInfoByID(DWORD ecx, DWORD edx, int a2, 
 			{
 				for (j = 0; j < v11; ++j)
 				{
-					v5 = ObsidianIsRetardedHook((DWORD)v9, j);
+					v5 = TESTopic_getTopicInfoByIndex((DWORD)v9, j);
 					if (v5 && (*(DWORD*)(v5 + 0xC)) == a2)
 						return v5;
 				}
@@ -324,192 +209,105 @@ unsigned int __fastcall TESTopic_getTopicInfoByID(DWORD ecx, DWORD edx, int a2, 
 	return 0;
 }
 
-
-int __fastcall HookA59E00(unsigned int* ecx, void* edx ,unsigned int* a2)
-{
-	
-	return (!(ecx[12] & 1)) ? (*(int(__thiscall * *)(unsigned int*, unsigned int*))(*a2 + 0x44))(a2, ecx) : 0;
-}
-
-/*
-
-int __fastcall sub_B9F480(DWORD* ecx, void* edx, int a2)
-{
-	int result; // eax
-	int v4; // esi
-	int v5; // ebp
-	DWORD* v6; // edi
-	DWORD* v7; // eax
-	DWORD* v8; // ecx
-	DWORD* v9; // edx
-	int* v10; // esi
-	int* v11; // esi
-	int v12; // [esp+Ch] [ebp+4h]
-	DWORD* dword_11FFFE4 =(DWORD*) 0x11FFFE4;
-	DWORD* dword_11FFFE0 = (DWORD*)0x11FFFE0;
-	DWORD* dword_11F4288 = (DWORD*)0x11F4288;
-	DWORD* unk_126F554 = (DWORD*)0x126F554;
-
-
-	int (__fastcall *sub_C1B4A0)(DWORD ecx, DWORD edx,volatile LONG a2) = (int(__fastcall*)(DWORD, DWORD, volatile LONG )) 0xC1B4A0;
-	void(__cdecl * callWithExceptionHandling)(DWORD ecx) = (void(__cdecl*)(DWORD)) 0xC1B4A0;
-	/*
-		result = 1;
-	if (!(dword_11FFFE4 & 1))
-	{
-		dword_11FFFE4 |= 1u;
-		dword_11FFFE0 = 0;
-		result = callWithExceptionHandling(au_re_InterlockedDecrement_65);
-	}
-
-	//The part above isn't an issue so who cares
-	v4 = a2;
-	if (*(DWORD*)(a2 + 192))
-	{
-		result = sub_B4F580(&unk_126F554);
-		if (result)
-		{
-			result = a2 + 156;
-			if (a2 != -156)
-			{
-				v5 = *(DWORD*)(a2 + 168);
-				v12 = v5 ? *(DWORD*)(v5 + 28) : -1;
-				if ((unsigned int)(v12 - 1) <= 0xB)
-				{
-					v6 = (DWORD*)ecx[78];
-					v7 = v6;
-					if (!v6)
-						v7 = (DWORD*)ecx[56];
-					if (v7)
-					{
-						while (1)
-						{
-							v8 = v7 + 2;
-							v9 = v7;
-							v7 = (DWORD*)* v7;
-							if (*v8 == v4)
-								break;
-							if (!v7)
-								goto LABEL_15;
-						}
-						if (v6)
-							sub_B702E0(v9, ecx[78]);
-						v11 = *(int**)(v4 + 32);
-						if (!v11)
-							v11 = &dword_11F4288;
-						result = sub_B71560(ecx, v11);
-					}
-					else
-					{
-					LABEL_15:
-						result = sub_4A2020(12);
-						if (!(_BYTE)result || v12 == 4)
-						{
-							dword_11FFFE0 = v4;
-							v10 = *(int**)(v4 + 32);
-							if (!v10)
-								v10 = &dword_11F4288;
-							sub_B71560(ecx, v10);
-							result = sub_C1B4A0(&dword_11FFFE0);
-							dword_11FFFE0 = 0;
-						}
-					}
-				}
-			}
-		}
-	}
-	return result;
-}
-
-*/
-	/*
-
-	void __ecxcall sub_B9F480(DWORD ecx, int a2)
-	{
-
-		if (!(dword_11FFFE4 & 1))
-		{
-			dword_11FFFE4 |= 1u;
-			dword_11FFFE0 = 0;
-			callWithExceptionHandling(au_re_InterlockedDecrement_65);
-		}
-		v3 = a2;
-		if (*(DWORD*)(a2 + 192) && sub_B4F580(&unk_126F554) && a2 != -156)
-		{
-			v4 = *(DWORD*)(a2 + 168);
-			v11 = v4 ? *(DWORD*)(v4 + 28) : -1;
-			if ((unsigned int)(v11 - 1) <= 0xB)
-			{
-				v5 = *(DWORD * *)(ecx + 312);
-				v6 = v5;
-				if (!v5)
-					v6 = *(DWORD * *)(ecx + 224);
-				if (v6)
-				{
-					while (1)
-					{
-						v7 = v6 + 2;
-						v8 = v6;
-						v6 = (DWORD*)* v6;
-						if (*v7 == v3)
-							break;
-						if (!v6)
-							goto LABEL_15;
-					}
-					if (v5)
-						sub_B702E0(v8, *(DWORD*)(ecx + 312));
-					v10 = *(int**)(v3 + 32);
-					if (!v10)
-						v10 = &dword_11F4288;
-					sub_B71560(ecx, v10);
-				}
-				else
-				{
-				LABEL_15:
-					if (!(unsigned __int8)sub_4A2020(12) || v11 == 4)
-					{
-						dword_11FFFE0 = v3;
-						v9 = *(int**)(v3 + 32);
-						if (!v9)
-							v9 = &dword_11F4288;
-						sub_B71560(ecx, v9);
-						sub_C1B4A0((DWORD*)(ecx + 224), (volatile LONG * *)& dword_11FFFE0);
-						dword_11FFFE0 = 0;
-					}
-				}
-			}
-		}
-	}*/
-void HookInlines(){
+void HookInlines() {
+	// replace functions with compiler optimised versions
 	WriteRelCall(0x0AA6AC9, (UInt32)HookHotSpot1);
-	WriteRelJump(0x0619F20, (UInt32)ObsidianIsRetardedHook);
-	//SafeWrite32(0x10A2904, (UInt32) MemHeapAlloc);
+	WriteRelJump(0x0619F20, (UInt32)TESTopic_getTopicInfoByIndex);
+	WriteRelJump(0xA694E0, (UInt32)InlinedA694E0);
+	WriteRelJump(0xA1E380, (UInt32)StringNiTMap__Lookup);
+	WriteRelJump(0x853130, (UInt32)StringNiTMap__Lookup);
+	WriteRelJump(0x0438AF0, (UInt32)NiTMapBase_FreeBuckets);
+	WriteRelJump(0x0619E10, (UInt32)TESTopic_getTopicInfoByID);
+	SafeWriteBuf(0x0576D30, Inline576D30, 13);
+	SafeWriteBuf(0x595C80, Inline595C80, 32);
+	SafeWriteBuf(0x416870, Inline416870, 37);
+	SafeWriteBuf(0x439EF0, Inline439EF0, 53);
+	SafeWriteBuf(0x49DA80, Inline49DA80, 72); 
+
+	// optimise GetSettingValue's
+	// int
+	SafeWriteBuf(0x43D4D0, leaEaxEcxPlus4, 4); 
+
+	// float
+	SafeWriteBuf(0x403E20, leaEaxEcxPlus4, 4);
+
+	// string
+	SafeWriteBuf(0x403DF0, GetStringSetting, 11);
+	
+	// float*
+	SafeWriteBuf(0x408D60, leaEaxEcxPlus4, 4);
+	
+	// remove calls to FormatString in memory allocation functions
 	WriteRelJump(0x0AA946D, 0x0AA94CB);
 	WriteRelJump(0x0AA92B1, 0x0AA9310);
 	WriteRelJump(0xAA964E, 0x0AA96AF);
-	//WriteRelJump(0xED5ABB, (UInt32)OurFastcall);
-	WriteRelJump(0x08D8520, (UInt32)FastTESMobile_GETBASEPROCESS);
-	//	WriteRelJump(0x045CD60, (UInt32)FastGetThis0x28);
-	//	WriteRelJump(0x044DDC0, (UInt32)FastGetThis0x8);
-	WriteRelJump(0xA694E0, (UInt32)InlinedA694E0);
-	WriteRelJump(0x0576D30, (UInt32)Inline576D30);
-	//	WriteRelJump(0x0559450, (UInt32)FastDereference);
-		//WriteRelJump(0x0EC4835, (UInt32)memcmp);
-	//More hooks
-			//WriteRelJump(0x5CA4F0, (UInt32)DereferenceNotNull);
-	WriteRelJump(0x595C80, (UInt32)Hook595C80);
-	WriteRelJump(0xA1E380, (UInt32)StringNiMap__Lookup);
-	WriteRelJump(0x853130, (UInt32)StringNiMap__Lookup);
-	WriteRelJump(0x416870, (UInt32)Hook416870);
-	WriteRelJump(0x439EF0, (UInt32)Hook439EF0);
-	//WriteRelJump(0xA59E00, (UInt32)HookA59E00);
-	WriteRelJump(0x0438AF0, (UInt32)NiTMapBase_FreeBuckets);
-	WriteRelJump(0x0619E10, (UInt32)TESTopic_getTopicInfoByID);
-	//WriteRelCall(0x40886D, (UInt32)ffabs);
-	//SafeWriteBuf(0x408860, "\xD9\x44\x24\x04\xD9\xE1\xC3", 7);
-	//SafeWriteBuf(0x0EC6CDE, "\xD9\x44\x24\x04\xD9\xE1\xC3", 7);
 
-	//HookZLib();
-			//WriteRelJump(0x08256D0, (UInt32)FastThisAndThis_4Check);
+	// TESForm::GetTypeID
+	SafeWriteBuf(0x401150, movzxEaxECXplus4, 5);
 
+	// TESForm::GetTypeID
+	SafeWriteBuf(0x401170, movzxEaxECXplus4, 5);
+
+	// inlines calls to set tls
+	SafeWriteBuf(0x404EE0, "\xFF\x31\xE8\x49\x00\x00\x00\x83\xC4\x04\xC3", 11); // push [ecx]; call ...  ; add esp, 4; ret
+
+	// modelToWorld
+	// FLD ST0, DWORD PTR DS:[0x011C582C]
+	// FMUL ST0, DWORD PTR SS : [ESP + 0x4]
+	// ret
+	SafeWriteBuf(0x4A3E90, "\xD9\x05\x2C\x58\x1C\x01\xD8\x4C\x24\x04\xC3", 11);
+
+	// FormHeap::Free
+	SafeWriteBuf(0x401030, "\xFF\x74\x24\x04\xB9\x38\x62\x1F\x01\xE8\x22\x30\x6A\x00\xC3", 15); // push [esp+4]; mov ecx, g_formHeap; call Game__MemoryPoolFree; ret
+
+	// FormHeap::Allocate
+	SafeWriteBuf(0x401000, "\xFF\x74\x24\x04\xB9\x38\x62\x1F\x01\xE8\x32\x2E\x6A\x00\xC3", 15); // push [esp+4]; mov ecx, g_formHeap; call Game__MemoryPoolAllocate; ret
+
+	// this
+	SafeWriteBuf(0x6815C0, "\x8B\xC1\xC3", 3); // mov eax, ecx; ret
+
+	// this[1]
+	SafeWriteBuf(0x726070, "\x8B\x41\x04\xC3", 4);
+
+	// this[3]
+	SafeWriteBuf(0x84E3A0, "\x8B\x41\x0C\xC3", 4);
+
+	// this[5]
+	SafeWriteBuf(0x825C00, "\x8B\x41\x14\xC3", 4);
+
+	// NiTArray__calcOffsetForArrayOfUInt32
+	SafeWriteBuf(0x877A30, "\x8B\x49\x04\x8B\x44\x24\x04\x8D\x04\x81\xC2\x04\x00", 13);
+
+	// skip over useless formatString when loading
+	WriteRelJump(0x467A84, 0x467B0E);
+
+	// this + 4
+	SafeWriteBuf(0x717E50, "\x8B\xC1\x83\xC0\x04\xC3", 6);
+
+	// TESMobileObject__GetBaseProcess
+	SafeWriteBuf(0x8D8520, "\x8B\x41\x68\xC3", 4);
+
+	// this + 8
+	SafeWriteBuf(0x413F40, "\x8B\xC1\x83\xC0\x08\xC3", 6);
+
+	// return 0
+	SafeWriteBuf(0x8D0370, "\x32\xC0\xC2\x04\x00", 5);
+
+	// unused array function
+	SafeWriteBuf(0x72BA80, "\xC2\x08\x00", 3); // ret 8
+
+	// this[2]isZero
+	SafeWriteBuf(0x76B610, "\x83\x79\x08\x00\x0F\x94\xC0\xC3", 8); // cmp [ecx + 8], 0; sete al; ret
+
+	// return1
+	SafeWriteBuf(0x401290, "\xB0\x01\xC2\x04\x00", 5); // mov al, 1; ret
+
+	// return empty string
+	SafeWriteBuf(0x401280, "\xB8\x84\x15\x01\x01\xC3", 6);
+
+	// fillchar
+	WriteRelJump(0x403D30, 0xEC61C0);
+
+	// nullsub
+	SafeWrite8(0x483710, 0xC3);
 }
