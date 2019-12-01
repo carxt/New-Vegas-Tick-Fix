@@ -26,25 +26,16 @@ bool IsMenuMode()
 
 void TimeGlobalHook() {
 	if (!initTimeHook) {
-	//	timeBeginPeriod(1); //whatever
+		//	timeBeginPeriod(1); //whatever
 		initTimeHook = true;
 		LastTime = timeGetTime();
-		DefaultMaxTime = *fMaxTime;
+		DefaultMaxTime = (*fMaxTime) * 1000;
 	}
 	UINT32 getTime = timeGetTime();
 	double Delta = ((double)(getTime - LastTime));
+	*g_FPSGlobal = Delta;
 	LastTime = getTime;
-	if (!IsMenuMode || Delta <= 0)
-	{
-	
-		*fMaxTime = Delta / 1000;
-		*g_FPSGlobal = Delta;
-	}
-	else
-	{
-		*fMaxTime = DefaultMaxTime;
-		*g_FPSGlobal = 0;
-	}
+	*fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime) ? Delta / 1000 : DefaultMaxTime / 1000);
 }
 
 
