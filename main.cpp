@@ -60,7 +60,7 @@ bool NVSEPlugin_Load(const NVSEInterface * nvse)
 
 	if (g_bGTCFix <= 0 && g_bFastExit <= 0 && g_bInlineStuff <= 0 && g_bFPSFix == 0) return false;
 	
-
+	DoPatches();
 
 
 	return true;

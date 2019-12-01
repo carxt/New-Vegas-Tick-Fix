@@ -1,9 +1,13 @@
 #pragma once
 #include "hooks.h"
 
-float* g_TimeGlobal = (float*)(0x11F6398);
-static double LastTime;
-static UINT32 OriginalFunction;
+float* g_FPSGlobal = (float*)(0x11F6398);
+UINT32 LastTime;
+UINT32 OriginalFunction;
+float* fMaxTime = (float*)0x1267B38;
+bool initTimeHook = false;
+float DefaultMaxTime = 0;
+DWORD* InterfSingleton = (DWORD *)0x11D8A80;
 
 
 
@@ -12,19 +16,35 @@ int g_bFastExit = 0;
 int g_bInlineStuff = 0;
 int g_bFPSFix = 0;
 
-void TimeGlobalHook() {
-	float* fMaxTime = (float*)0x1267B38;
-	static bool init = false;
-	if (!init) {
-		init = true;
-		LastTime = timeGetTime();
-	}
 
-	double getTime = timeGetTime();
-	double Delta = (getTime - LastTime);
-	*g_TimeGlobal = Delta;
+bool IsMenuMode()
+{
+	if (!(*InterfSingleton) ||   !(*(BYTE*)(*InterfSingleton))) return false;
+	return ((*(DWORD*)((*InterfSingleton) + 12)) != 0);
+}
+
+
+void TimeGlobalHook() {
+	if (!initTimeHook) {
+	//	timeBeginPeriod(1); //whatever
+		initTimeHook = true;
+		LastTime = timeGetTime();
+		DefaultMaxTime = *fMaxTime;
+	}
+	UINT32 getTime = timeGetTime();
+	double Delta = ((double)(getTime - LastTime));
 	LastTime = getTime;
-	*fMaxTime = Delta;
+	if (!IsMenuMode || Delta <= 0)
+	{
+	
+		*fMaxTime = Delta / 1000;
+		*g_FPSGlobal = Delta;
+	}
+	else
+	{
+		*fMaxTime = DefaultMaxTime;
+		*g_FPSGlobal = 0;
+	}
 }
 
 
@@ -49,8 +69,9 @@ void __declspec(naked) FPSHookHandler()
 
 void HookFPSStuff()
 {
-	OriginalFunction = ((*(UINT32*)(0x86B3E3 + 1)) + 5);
-	WriteRelCall((UINT32)0x86B3E3, (UInt32)FPSHookHandler);
+	OriginalFunction = (((*(UINT32*)(0x86B3E3 + 1)) + 5)) + 0x86B3E3;
+	_MESSAGE("%x", OriginalFunction);
+	WriteRelCall((UINT32)0x86B3E3, (UInt32)&FPSHookHandler);
 }
 
 void DoPatches()
@@ -60,8 +81,7 @@ void DoPatches()
 	if (g_bFastExit) WriteRelJump(0x86B66E, (UInt32)FastExit);
 	if (g_bGTCFix) {
 		timeBeginPeriod(1);
-		ULONG Address = (DWORD)timeGetTime;
-		SafeWrite32(0xFDF060, (UInt32)Address);
+		SafeWrite32(0xFDF060, (UInt32)timeGetTime);
 		if (g_bFPSFix) HookFPSStuff();
 	}
 
