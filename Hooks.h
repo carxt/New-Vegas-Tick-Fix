@@ -159,70 +159,240 @@ unsigned int** __fastcall NiTMapBase_FreeBuckets(unsigned int** ecx)
 	return ecx;
 }
 
-DWORD __cdecl TESTopic_getTopicInfoByIndex(DWORD a1, int a2)
+TESTopicInfo* __cdecl TESTopic_getTopicInfoByIndex(TESTopic::Info* info, int index)
 {
-	int* test = (int*)(a1 + 4);
-	return (a1 == 0 || (test[3] < a2)) ? 0 : *(DWORD*)(test[1] + 4 * a2);
+	if (!info) return NULL;
+	
+	TopicInfoArray* array = &info->infoArray;
+	if (index > array->numObjs) return NULL;
 
+	return array->Get(index);
 }
 
-unsigned int __fastcall TESTopic_getTopicInfoByID(DWORD ecx, DWORD edx, int a2, char a3)
+TESTopicInfo* __fastcall TESTopic_getTopicInfoByID(TESTopic* topic, DWORD edx, int ID, char getLastNotFirst)
 {
-	char* v3; // eax
-	int v5; // [esp+4h] [ebp-1Ch]
-	unsigned int j; // [esp+8h] [ebp-18h]
-	int v7; // [esp+Ch] [ebp-14h]
-	int i; // [esp+10h] [ebp-10h]
-	char* v9; // [esp+14h] [ebp-Ch]
-	void* v10; // [esp+18h] [ebp-8h]
-	unsigned int v11; // [esp+1Ch] [ebp-4h]
-
-	v10 = (DWORD*)(ecx + 44);
-	while (v10 && *(DWORD*)v10)
+	ListNode<TESTopic::Info>* iter = topic->infos.Head();
+	TESTopic::Info* info;
+	UInt32 size;
+	TESTopicInfo** dataPtr;
+	TESTopicInfo* someInfo;
+	if (getLastNotFirst)
 	{
-		v9 = *(char**)(v10);
-		v10 = *(void**)(((DWORD)v10) + 4);
-		v11 = *(unsigned int*)((((DWORD)v9) + 4) + 0xC);
-		//v11 = *(unsigned int*) (((DWORD)v9) + 0xC);
-		if (v11)
+		do
 		{
-			if ((BYTE)a3)
+			if (!(info = iter->data))
+				continue;
+			size = info->infoArray.numObjs;
+			dataPtr = info->infoArray.data + size;
+			while (size)
 			{
-				for (i = v11 - 1; i >= 0; --i)
-				{
-					v7 = TESTopic_getTopicInfoByIndex((DWORD)v9, i);
-					if (v7 && (*(DWORD*)(v7 + 0xC)) == a2)
-						return v7;
-				}
+				size--;
+				dataPtr--;
+				if ((someInfo = *dataPtr) && (someInfo->refID == ID))
+					return someInfo;
 			}
-			else
-			{
-				for (j = 0; j < v11; ++j)
-				{
-					v5 = TESTopic_getTopicInfoByIndex((DWORD)v9, j);
-					if (v5 && (*(DWORD*)(v5 + 0xC)) == a2)
-						return v5;
-				}
-			}
-		}
+		} while (iter = iter->next);
 	}
-	return 0;
+	else
+	{
+		do
+		{
+			if (!(info = iter->data))
+				continue;
+			size = info->infoArray.numObjs;
+			dataPtr = info->infoArray.data;
+			while (size)
+			{
+				size--;
+				if ((someInfo = *dataPtr) && (someInfo->refID == ID))
+					return someInfo;
+				dataPtr++;
+			}
+		} while (iter = iter->next);
+	}
+	return NULL;
 }
 
-void HookInlines() {
+bool __cdecl TESTopic__Compare(TESTopic* a1, TESTopic* a2, char checkUnk28)
+{
+	if (!a1 || !a2)	return false;
+	
+	if (checkUnk28)
+	{
+		float diff = a2->unk28 - a1->unk28;
+		if (diff > 0.0001) return true;
+		if (fabs(diff) > 0.001) return false;
+
+		char* name1 = a1->GetName();
+		char* name2 = a2->GetName();
+
+		if (*name1 < *name2) return true;
+		return stricmp(name1, name2) > 0;
+		
+	}
+	char* name1 = a1->GetName();
+	char* name2 = a2->GetName();
+
+	if (*name1 < *name2)
+		return 1;
+	return stricmp(name1, name2) > 0;
+}
+
+/*
+bool __fastcall tList_isEmpty(ListNode<void*>* list)
+{
+	return !list->next && !list->data;
+}
+
+_declspec(naked) bool __fastcall tList_isEmpty(ListNode<void*>* list)
+{
+	_asm
+	{
+		cmp dword ptr ds : [ecx + 4] , 0
+		jne nonEmpty
+		cmp dword ptr ds : [ecx] , 0
+		jne nonEmpty
+		mov al, 1
+		ret
+	nonEmpty :
+		xor al, al
+		ret
+	}
+}
+*/
+char* tList_isEmpty = "\x3E\x83\x79\x04\x00\x75\x09\x3E\x83\x39\x00\x75\x03\xB0\x01\xC3\x32\xC0\xC3";
+
+__declspec(naked) NiVector4* __cdecl Sub_4A3E00_Hook(NiVector4 *outVec, NiVector3 *inVec)
+{
+    __asm
+    {
+        mov      eax, 0x11C582C
+        movd     xmm0, dword ptr [eax]
+        movsldup xmm1, xmm0
+        movlhps  xmm1, xmm1
+        mov      eax, [esp+4]
+        mov      ecx, [esp+8]
+        movdqu   xmm0, xmmword ptr [ecx]
+        mulps    xmm0, xmm1
+        movdqu   xmmword ptr [eax], xmm0
+        mov      dword ptr [eax+0xC], 0
+        retn
+    }
+}
+
+/*
+void __stdcall wait(unsigned int a1, unsigned int a2, int a3, void* (__thiscall* a4)(unsigned int))
+{
+	while (--a3 >= 0)
+	{
+		a4(a1);
+		a1 = a1 + a2;
+	}
+}
+
+_declspec(naked) void wait()
+{
+	_asm
+	{
+		push esi
+		mov esi, dword ptr ss : [esp + 0x10]
+		dec esi
+		js done
+		push ebx
+		mov ebx, dword ptr ss : [esp + 0x18]
+		push ebp
+		mov ebp, dword ptr ss : [esp + 0x14]
+		push edi
+		mov edi, dword ptr ss : [esp + 0x14]
+	loopHead:
+		mov ecx, edi
+		call ebx
+		add edi, ebp
+		dec esi
+		jns loopHead
+		pop edi
+		pop ebp
+		pop ebx
+	done:
+		pop esi
+		ret 0x10
+	}
+}
+*/
+
+char* wait = "\x56\x8B\x74\x24\x10\x4E\x78\x1B\x53\x8B\x5C\x24\x18\x55\x8B\x6C\x24\x14\x57\x8B\x7C\x24\x14\x8B\xCF\xFF\xD3\x03\xFD\x4E\x79\xF7\x5F\x5D\x5B\x5E\xC2\x10\x00";
+
+/*
+bool __stdcall intsAreEqual(int a1, int a2)
+{
+	return a1 == a2;
+}
+
+_declspec(naked) bool __stdcall intsAreEqual(int a1, int a2)
+{
+	_asm
+	{
+		mov ecx, dword ptr ss : [esp + 4]
+		cmp ecx, dword ptr ss : [esp + 8]
+		sete al
+		ret 8
+	}
+}*/
+
+char* intsAreEqual = "\x8B\x4C\x24\x04\x3B\x4C\x24\x08\x0F\x94\xC0\xC2\x08\x00";
+
+/*
+int __fastcall sub_6C6A60(int* thiss, void* edx, unsigned int a2)
+{
+	return a2 % thiss[1];
+}
+
+
+_declspec(naked) int __fastcall sub_6C6A60(int* thiss, void* edx, unsigned int a2)
+{
+	_asm
+	{
+		mov eax, dword ptr ss : [esp + 4]
+		xor edx, edx
+		div dword ptr ds : [ecx + 4]
+		mov eax, edx
+		ret 4
+	}
+}
+*/
+char* sub_6C6A60 = "\x36\x8B\x44\x24\x04\x33\xD2\x3E\xF7\x71\x04\x8B\xC2\xC2\x04\x00";
+
+void HookInlines() 
+{
 	// replace functions with compiler optimised versions
-	WriteRelCall(0x0AA6AC9, (UInt32)HookHotSpot1);
-	WriteRelJump(0x0619F20, (UInt32)TESTopic_getTopicInfoByIndex);
-	WriteRelJump(0xA694E0, (UInt32)InlinedA694E0);
-	WriteRelJump(0xA1E380, (UInt32)StringNiTMap__Lookup);
-	WriteRelJump(0x853130, (UInt32)StringNiTMap__Lookup);
-	WriteRelJump(0x0438AF0, (UInt32)NiTMapBase_FreeBuckets);
-	WriteRelJump(0x0619E10, (UInt32)TESTopic_getTopicInfoByID);
+	WriteRelCall(0x0AA6AC9, UInt32(HookHotSpot1));
+	WriteRelCall(0x61A3F9, UInt32(TESTopic__Compare));
+	WriteRelCall(0x61A654, UInt32(TESTopic__Compare));
+
+	for (UInt32 patchAddr : {0x618779, 0x6199E1, 0x619CD0, 0x619DBC, 0x619EA4, 0x619EED})
+	{
+		WriteRelCall(patchAddr, UInt32(TESTopic_getTopicInfoByIndex));
+	}
+
+	WriteRelCall(0x6198A9, UInt32(TESTopic_getTopicInfoByID));
+	WriteRelCall(0x61A35D, UInt32(TESTopic_getTopicInfoByID));
+
+	WriteRelCall(0xA6967D, UInt32(InlinedA694E0));
+	WriteRelCall(0xC4EF85, UInt32(InlinedA694E0));
+
+	WriteRelJump(0xA1E380, UInt32(StringNiTMap__Lookup));
+	WriteRelJump(0x853130, UInt32(StringNiTMap__Lookup));
+	WriteRelJump(0x0438AF0, UInt32(NiTMapBase_FreeBuckets));
+	
 	SafeWriteBuf(0x0576D30, Inline576D30, 13);
 	SafeWriteBuf(0x595C80, Inline595C80, 32);
 	SafeWriteBuf(0x416870, Inline416870, 37);
 	SafeWriteBuf(0x439EF0, Inline439EF0, 53);
 	SafeWriteBuf(0x49DA80, Inline49DA80, 72); 
+	SafeWriteBuf(0x6C6A60, sub_6C6A60, 18);
+	SafeWriteBuf(0xAE8DC0, intsAreEqual, 14);
+	SafeWriteBuf(0x6B81D0, intsAreEqual, 14);
+	SafeWriteBuf(0x401050, wait, 39);
 
 	// optimise GetSettingValue's
 	// int
@@ -232,8 +402,8 @@ void HookInlines() {
 	SafeWriteBuf(0x403E20, leaEaxEcxPlus4, 4);
 
 	// string
-	SafeWriteBuf(0x403DF0, GetStringSetting, 11);
-	
+	SafeWriteBuf(0x403DF0, GetStringSetting, 11); 
+
 	// float*
 	SafeWriteBuf(0x408D60, leaEaxEcxPlus4, 4);
 	
@@ -287,6 +457,9 @@ void HookInlines() {
 	// TESMobileObject__GetBaseProcess
 	SafeWriteBuf(0x8D8520, "\x8B\x41\x68\xC3", 4);
 
+	// BaseProcess__GetProcessLevel
+	SafeWriteBuf(0x45CD60, "\x8B\x41\x28\xC3", 4);
+
 	// this + 8
 	SafeWriteBuf(0x413F40, "\x8B\xC1\x83\xC0\x08\xC3", 6);
 
@@ -310,4 +483,13 @@ void HookInlines() {
 
 	// nullsub
 	SafeWrite8(0x483710, 0xC3);
+
+	// GetFormHeap
+	SafeWriteBuf(0x401020, "\xB8\x38\x62\x1F\x01\xC3", 6);
+
+	// tList_isEmpty
+	SafeWriteBuf(0x8256D0, tList_isEmpty, 19);
+
+	// some havok
+	SafeWriteBuf(0x4A3E00, (char*)Sub_4A3E00_Hook, 0x2B);
 }
