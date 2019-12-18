@@ -1,9 +1,8 @@
 #pragma once
 ULONG g_iSpinCount = 0;
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x601
-#endif
+
+
+//this program requires redefining the _WIN32_WINNT definition to 0x601 for InitializeCriticalSectionEx. 
 
 
 //this shit is for XP, but that's old af already
@@ -90,9 +89,14 @@ void __declspec (naked) MemHeapCSHook(DWORD* MemHeap)
 void __stdcall func_InitCSHandler(LPCRITICAL_SECTION cs, DWORD Spin)
 
 {
+#ifdef _WIN32_WINNT >= _WIN32_WINNT_WIN7
 	InitializeCriticalSectionEx(cs, Spin, CRITICAL_SECTION_NO_DEBUG_INFO);
-
+#else
+	InitializeCriticalSectionAndSpinCount(cs, Spin);
+#endif
 }
+
+
 
 
 
