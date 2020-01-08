@@ -1,10 +1,10 @@
-# **NEW  VEGAS TICK FIX**
-
-
-
-
-
-##### NEW  VEGAS TICK FIX is a project aiming to aid with the most common performance issues in the game Fallout New Vegas.
+# **New Vegas Tick Fix**
+ 
+ 
+ 
+ 
+ 
+ New Vegas Tick Fix is a project aiming to aid with the most common performance issues in the game Fallout New Vegas.
 
 
 
