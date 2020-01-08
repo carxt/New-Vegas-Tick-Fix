@@ -45,7 +45,7 @@ Copy to the NVSE/Data/Plugins directory
 ### Credits:
 
 ###### Carxt, lStewieAl, jazzisparis - feature developers
-###### gspy - QA Tester, Q&A Manager, community feedback
+###### tgspy - QA Tester, Q&A Manager, community feedback
 
 
 ### Special thanks to:
