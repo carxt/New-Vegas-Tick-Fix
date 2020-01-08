@@ -1,15 +1,15 @@
-NEW  VEGAS TICK FIX is a project aiming to aid with the most common performance issues in the game Fallout New Vegas.
+#NEW  VEGAS TICK FIX is a project aiming to aid with the most common performance issues in the game Fallout New Vegas.
 
-Installation:
+##Installation:
 
 Copy to the NVSE/Data/Plugins directory
 
 
 
 
-Dependencies
+##Dependencies
 
-Visual Studio 2013
+###Visual Studio 2013
 New Vegas Script Extender
 
 
