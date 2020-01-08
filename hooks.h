@@ -6,8 +6,7 @@ char* leaEaxEcxPlus4 = "\x8D\x41\x04\xC3"; // lea eax, [ecx+4] ; ret
 
 
 
-
-
+//This namespace isn't a comprehensive list of jazzisparis' contribution, but simply a way for me to keep track of some hooks before merge
 namespace jazz
 {
 	__declspec(naked) void __fastcall RotationMatrixHook(NiMatrix33* resMat, int EDX, float angX, float angY, float angZ)
