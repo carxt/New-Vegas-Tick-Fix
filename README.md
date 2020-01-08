@@ -1,47 +1,56 @@
-#NEW  VEGAS TICK FIX is a project aiming to aid with the most common performance issues in the game Fallout New Vegas.
+# **NEW  VEGAS TICK FIX**
 
-##Installation:
+
+
+
+
+##### NEW  VEGAS TICK FIX is a project aiming to aid with the most common performance issues in the game Fallout New Vegas.
+
+
+
+
+### Installation:
 
 Copy to the NVSE/Data/Plugins directory
 
 
 
 
-##Dependencies
+### Dependencies
 
-###Visual Studio 2013
-New Vegas Script Extender
-
-
-Supported games:
-
-Fallout New Vegas.
+###### Visual Studio 2013
+###### New Vegas Script Extender
 
 
-Current features:
+### Supported games:
+
+###### Fallout New Vegas.
 
 
-Replace GetTickCount with a far more accurate timing API (QueryPerformanceCounter)
-
-Dynamically adjust the FPS Delta, to help with High FPS.
-
-Fast Exit.
-
-Optimization of heavy functions.
-
-Critical Section spin tweaking.
+### Current features:
 
 
+###### Replace GetTickCount with a far more accurate timing API (QueryPerformanceCounter)
 
-Credits:
+###### Dynamically adjust the FPS Delta, to help with High FPS.
 
-Carxt, lStewieAl, jazzisparis - feature developers
-tgspy - QA Tester, Q&A Manager, community feedback
+###### Fast Exit.
+
+###### Optimization of heavy functions.
+
+###### Critical Section spin tweaking.
 
 
-Special thanks to:
-ceski.
-TrueCourierSix AKA Maletsna. 
+
+### Credits:
+
+###### Carxt, lStewieAl, jazzisparis - feature developers
+###### gspy - QA Tester, Q&A Manager, community feedback
+
+
+### Special thanks to:
+###### ceski.
+###### TrueCourierSix AKA Maletsna. 
 
 
 
