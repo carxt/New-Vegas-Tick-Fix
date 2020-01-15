@@ -49,9 +49,10 @@ bool IsMenuMode()
 }
 
 void TimeGlobalHook() {
-
+	//Console_Print("%lu", timeGetTime());
+	//Console_Print("%lu", (UInt32)ReturnCounter());
 	double Delta = GetFPSCounterMiliSeconds();
-	*g_FPSGlobal = ((Delta > 0 && Delta < DesiredMin && Delta > DesiredMax) ? Delta : 0);
+	*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
 	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime && Delta > DesiredMax) ? Delta / 1000 : DefaultMaxTime / 1000);
 }
 
@@ -87,13 +88,17 @@ void DoPatches()
 	if (g_bSpinCriticalSections) {
 		_MESSAGE("CS ENABLED");
 		WriteRelJump(0x0A62B08, (UInt32)NiObjectCriticalSections);
-		WriteRelJump(0x0FB3343, (UInt32)someOddCSCall);
-		WriteRelJump(0x0A5B570, (UInt32)someOddCSCall_2);
+	//	WriteRelJump(0x0FB3343, (UInt32)someOddCSCall);
+	//	WriteRelJump(0x0A5B570, (UInt32)someOddCSCall_2);
 		WriteRelJump(0x0AA8D5B, (UInt32)MemHeapCSHook);
-
+		DoHeapCriticalSectionSpin();
 		if ((signed int)g_iSpinCount > -1) {
 			SafeWrite32(0x0FDF054, (UInt32)InitCriticalSectionHook);
-		}	}
+		}
+
+
+
+	}
 	
 	if (g_bInlineStuff) {
 		HookInlines(); //	MathHooks();
@@ -102,9 +107,9 @@ void DoPatches()
 	if (g_bFastExit) WriteRelJump(0x86B66E, (UInt32)FastExit);
 	if (g_bGTCFix) {
 		_MESSAGE("TGT ENABLED");
-
-		timeBeginPeriod(1);
-		SafeWrite32(0xFDF060, (UInt32)timeGetTime);
+		//timeBeginPeriod(1);
+		//SafeWrite32(0xFDF060, (UInt32)timeGetTime);
+		SafeWrite32(0xFDF060, (UInt32)ReturnCounter);
 		if (g_bFPSFix)
 		{
 			_MESSAGE("FPSFIX ENABLED");
@@ -120,4 +125,7 @@ void DoPatches()
 		}
 	}
 
+
+
+	SafeWrite32(0xFDF05C, (UInt32)ReturnCSHook);
 }
