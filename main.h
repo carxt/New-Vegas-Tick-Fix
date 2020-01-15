@@ -127,5 +127,4 @@ void DoPatches()
 
 
 
-	SafeWrite32(0xFDF05C, (UInt32)ReturnCSHook);
 }
