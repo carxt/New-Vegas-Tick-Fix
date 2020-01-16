@@ -109,6 +109,7 @@ void DoPatches()
 		_MESSAGE("TGT ENABLED");
 		//timeBeginPeriod(1);
 		//SafeWrite32(0xFDF060, (UInt32)timeGetTime);
+		FPSStartCounter();
 		SafeWrite32(0xFDF060, (UInt32)ReturnCounter);
 		if (g_bFPSFix)
 		{
@@ -118,7 +119,6 @@ void DoPatches()
 				DesiredMax = 1000 / double(g_iMaxFPS);
 				DesiredMin = 1000 / double(g_iMinFPS);
 				initTimeHook = true;
-				FPSStartCounter();
 				DefaultMaxTime = (*fMaxTime) * 1000;
 			}
 			HookFPSStuff();
