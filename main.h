@@ -45,6 +45,47 @@ int g_bModifyDirectXBehavior = 1;
 #include "CriticalSections.h"
 
 
+enum StartMenuFlags
+{
+	kHasChangedSettings = 0x2,
+	kLoad = 0x4,
+	kIsSaveMenuNotLoad = 0x8,
+	kIsMainMenuShown = 0x10,
+	kAreOptionsInitialised = 0x20,
+	kShowDLCPopup = 0x400,
+	kIsActionMapping = 0x1000,
+	kShowCredits = 0x10000,
+	kControllerDisconnected = 0x20000,
+	kSomethingSave = 0x40000000,
+	kShowMustRestartToSaveSettings = 0x400000,
+	ksomething_credits = 0x2000000,
+	kDeleteSave = 0x2000,
+	kControllerInputDebounce = 0x4000000,
+};
+
+static Menu* GetStartMenuSingleton() { return *(Menu * *)0x11DAAC0; };
+
+void FastExit()
+{
+	if (Menu * start = GetStartMenuSingleton())
+	{
+		if (*(UInt32*)(start  + 0x1A8) & StartMenuFlags::kHasChangedSettings)
+		{
+			((void (*)(void))(0x7D6D70))(); // SaveIniSettings
+		}
+	}
+	TerminateProcess(GetCurrentProcess(), 0);
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -91,10 +132,6 @@ void TimeGlobalHook() {
 
 
 
-void FastExit()
-{
-	TerminateProcess(GetCurrentProcess(), 0);
-}
 
 
 
