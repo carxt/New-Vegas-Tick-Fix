@@ -1,11 +1,5 @@
 #pragma once
 
-int g_bToggleTripleBuffering;
-int g_bUseFlipExSwapMode;
-int g_bD3D9ManageResources;
-//int g_bDisablePerformanceFix;
-int g_iNumBackBuffers;
-int g_bForceD3D9Ex;
 
 float* g_FPSGlobal = (float*)(0x11F6398);
 UINT32 LastTime;
@@ -42,10 +36,10 @@ int g_bAlternateGTCFix = 0;
 int g_bLightInlines = 0;
 int g_bHeavyInlines = 0;
 
+
 #include "hooks.h"
 #include "FPSTimer.h"
 #include "GameUI.h"
-#include "mathVegas.h"
 #include "direct3dhooks.h"
 #include "CriticalSections.h"
 
@@ -69,7 +63,6 @@ enum StartMenuFlags
 };
 
 static Menu* GetStartMenuSingleton() { return *(Menu * *)0x11DAAC0; };
-
 void ResetBrightness()
 {
 	if (foreWindow && D3DHooks::SetGammaRampInit)
@@ -124,7 +117,6 @@ inline UInt32 Calculaterel32(UInt32 Destination, UInt32 source)
 
 
 
-int g_bUseDynamicResources;
 //volatile double Delta;
  bool* g_DialogMenu = (bool*)0X11D9514;
  bool* g_IsMenuMode = (bool*)0x11DEA2B;

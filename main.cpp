@@ -94,7 +94,7 @@ extern "C" {
 		g_iNumBackBuffers = GetPrivateProfileInt("DirectX", "iNumBackBuffers", 2, iniDir);
 		g_bAlternateGTCFix = GetPrivateProfileInt("GTC", "bAlternateGTCFix", 0, iniDir);
 		g_bUseFlipExSwapMode = GetPrivateProfileInt("D3D9Ex", "bUseFlipExSwapMode", 0, iniDir);
-		g_bUseDynamicResources = GetPrivateProfileInt("D3D9Ex", "bUseDynamicResources", 0, iniDir);
+		g_bUseDynamicResources = GetPrivateProfileInt("D3D9Ex", "bUseDynamicResources", 1, iniDir);
 		g_bHeavyInlines = GetPrivateProfileInt("Inlines", "bHeavyInlines", 1, iniDir);
 		g_bLightInlines = GetPrivateProfileInt("Inlines", "bLightInlines", 0, iniDir);
 
