@@ -1,7 +1,7 @@
 #pragma once
 
 double FPSTimerFrequency = 0.0;
-LONGLONG CurrentStat = 0;
+ULONGLONG CurrentStat = 0;
 
 
 
@@ -17,13 +17,18 @@ void FPSStartCounter()
 
 double GetFPSCounterMiliSeconds()
 {
-
-	LARGE_INTEGER li;	
-	QueryPerformanceCounter(&li);
-	double toReturn = (double(li.QuadPart - CurrentStat)) / FPSTimerFrequency;
-	CurrentStat = li.QuadPart;
+	if (!g_bAlternateGTCFix) 
+	{
+		LARGE_INTEGER li;
+		QueryPerformanceCounter(&li);
+		double toReturn = (double(li.QuadPart - CurrentStat)) / FPSTimerFrequency;
+		CurrentStat = li.QuadPart;
+		return toReturn;
+	}
+	ULONGLONG tGtCurrent = timeGetTime();
+	double toReturn = double(tGtCurrent - CurrentStat);
+	CurrentStat = tGtCurrent;
 	return toReturn;
-
 }
 
 

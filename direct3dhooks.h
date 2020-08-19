@@ -4,8 +4,8 @@
 
 #pragma comment (lib, "d3d9.lib")
 #pragma comment (lib, "d3dx9.lib")
-
-
+#pragma comment (lib, "Gdiplus.lib")
+HWND foreWindow = NULL;
 
 namespace D3DHooks {
 	bool* g_DXEx = (bool*)0x126F0D0;
@@ -70,9 +70,13 @@ namespace D3DHooks {
 	HRESULT D3DAPI hk_CreateDeviceEx(IDirect3D9Ex* This, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* displayMod, IDirect3DDevice9Ex** ppReturnedDeviceInterface)
 	{
 		HRESULT hr;
+		//pPresentationParameters->SwapEffect = D3DSWAPEFFECT_DISCARD;
+		//BehaviorFlags &= ~D3DCREATE_MULTITHREADED;
+		//BehaviorFlags &= ~D3DCREATE_MULTITHREADED;
 
 		if (g_bToggleTripleBuffering) pPresentationParameters->BackBufferCount = (UINT)g_iNumBackBuffers;
-
+		if (pPresentationParameters->Windowed) foreWindow = hFocusWindow ? hFocusWindow : pPresentationParameters->hDeviceWindow;
+		//BehaviorFlags |= D3DCREATE_NOWINDOWCHANGES;
 		if (!IsD3D9ExAvailable()) {
 			if (g_bD3D9ManageResources) BehaviorFlags |= D3DCREATE_DISABLE_DRIVER_MANAGEMENT;
 			_MESSAGE("using CreateDevice for device creation");
@@ -81,6 +85,7 @@ namespace D3DHooks {
 		else {
 			if (g_bUseFlipExSwapMode)
 			{
+
 				pPresentationParameters->SwapEffect = D3DSWAPEFFECT_FLIPEX;
 				pPresentationParameters->Flags &= ~D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
@@ -89,7 +94,7 @@ namespace D3DHooks {
 			hr = This->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, displayMod, (IDirect3DDevice9Ex * *)ppReturnedDeviceInterface);
 			_MESSAGE("Using CreateDeviceEx for device creation\n");
 		}
-		_MESSAGE("present vtable: 0x%X", **(UINT32 * *)ppReturnedDeviceInterface);
+		//_MESSAGE("present vtable: 0x%X", **(UINT32 * *)ppReturnedDeviceInterface);
 		return hr;
 	}
 
@@ -122,7 +127,7 @@ namespace D3DHooks {
 		//Pool = IsD3D9ExAvailable() == 0 ? Pool : D3DPOOL_DEFAULT;
 		Usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
 		Usage |= D3DUSAGE_DYNAMIC;
-		Usage |= D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY;
+		Usage |= D3DUSAGE_WRITEONLY;
 
 		HRESULT hr = pDevice->CreateVertexBuffer(Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
 		//(*ppVertexBuffer)->Lock(1, 1, NULL, 1);
@@ -130,7 +135,9 @@ namespace D3DHooks {
 	}
 	HRESULT __stdcall hk_CreateIndexBuffer(LPDIRECT3DDEVICE9 pDevice, UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle)
 	{
-		Usage |= D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY;
+		Usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
+		Usage |= D3DUSAGE_DYNAMIC;
+		Usage |=  D3DUSAGE_WRITEONLY;
 		HRESULT hr = pDevice->CreateIndexBuffer(Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
 		//_MESSAGE("vtable here: %X", *(UINT*)ppIndexBuffer);
 		return hr;
@@ -138,6 +145,8 @@ namespace D3DHooks {
 	HRESULT __stdcall hk_VertexBufferLock(IDirect3DVertexBuffer9* ppVertexBuffer, UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 	{
 		Flags |= D3DLOCK_NOOVERWRITE;
+		Flags |= D3DLOCK_DISCARD;
+		Flags |= D3DLOCK_NOSYSLOCK;
 		HRESULT hr = ppVertexBuffer->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
 		return hr;
 	}
@@ -145,6 +154,8 @@ namespace D3DHooks {
 	{
 		//_MESSAGE("flegs: 0%X", Flags);
 		Flags |= D3DLOCK_NOOVERWRITE;
+		Flags |= D3DLOCK_DISCARD;
+		Flags |= D3DLOCK_NOSYSLOCK;
 		HRESULT hr = ppIndexBuffer->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
 		return hr;
 	}
@@ -197,28 +208,47 @@ namespace D3DHooks {
 
 		return D3DXCreateTextureFromFileInMemoryEx(pDevice, pSrcData, SrcDataSize, D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, D3DUSAGE_DYNAMIC, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, NULL, NULL, ppTexture);
 	}
-
-
+	
+	bool SetGammaRampInit = false;
+	D3DGAMMARAMP StartingGammaRamp;
+	void hk_SetGammaRamp(LPDIRECT3DDEVICE9 pDevice, UINT iSwapChain, DWORD Flags, const D3DGAMMARAMP* pRamp)
+	{
+		if (!foreWindow)
+		{
+			pDevice->SetGammaRamp(iSwapChain, Flags, pRamp);
+		}
+		else
+		{
+			HDC Devic = ::GetDC(foreWindow);
+			if (!SetGammaRampInit) { GetDeviceGammaRamp(Devic, &StartingGammaRamp); SetGammaRampInit = true; }
+			SetDeviceGammaRamp(Devic, (LPVOID)pRamp);
+			::ReleaseDC(foreWindow, Devic);
+		}
+	}
+	
 
 	void UseD3D9xPatchMemory(int ForceD3D9Ex, int ToggleDynamicResources)																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																										
 	{
-		g_iNumBackBuffers = g_iNumBackBuffers > 4 ? 4 : g_iNumBackBuffers < 1 ? 1 : g_iNumBackBuffers;
+		g_iNumBackBuffers = g_iNumBackBuffers > 4 ? 4 : (g_iNumBackBuffers < 1 ? 1 : g_iNumBackBuffers);
 
 		//SafeWriteBuf(0xE69482, "\x90\x90\x90\x90\x90\x90\x90", 7);
 		WriteRelJump(0xE731C1, (UInt32)(AsmHandleDirectXExCreation));
 		SafeWriteBuf(0xE731C6, "\x90\x90\x90\x90\x90", 5);
 		SafeWrite16(0x0E73191, 0x9090);
 		WriteRelCall(0xE76215, (uintptr_t)(hk_Direct3DCreate9));
+
+		
 		if (ForceD3D9Ex)
 		{
 
 			SafeWrite16(0xE94E87, 0xB890);
 			SafeWrite32(0xE94E89, (uintptr_t)AsmHandleCreateVertexBufferHook);
-			//VertexLock
-		/*	SafeWrite32(0xE8C014, 0xB8909090);
-			SafeWrite32(0xE8C018, (uintptr_t)AsmHandleVertexBufferLock);
+			WriteRelCall(0xE8F42B, (uintptr_t)hk_CreateIndexBuffer);
 			SafeWrite8(0xE8F2A0, 0xBA);
 			SafeWrite32(0xE8F2A1, (uintptr_t)hk_CreateIndexBuffer);
+			/*//VertexLock
+			SafeWrite32(0xE8C014, 0xB8909090);
+			SafeWrite32(0xE8C018, (uintptr_t)AsmHandleVertexBufferLock);
 			//Index Lock
 			SafeWrite32(0xE8F2FD, 0xB8909090);
 			SafeWrite32(0xE8F301, (uintptr_t)AsmHandleIndexBufferLock);*/
@@ -227,14 +257,14 @@ namespace D3DHooks {
 				SafeWriteBuf(0xE680D7, "\xB3\x00\x90", 3);
 				SafeWriteBuf(0xE6835F, "\xB3\x00\x90", 3);
 				SafeWriteBuf(0xE8AA93, "\xB3\x00\x90", 3);
-				WriteRelCall(0xE68DCD, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9));
+				//WriteRelCall(0xE68DCD, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9));
 				SafeWriteBuf(0xE73191, "\x90\x90", 2);
 				WriteRelCall(0xE68388, (UInt32)AsmHandleCreateTextureHook);
 				SafeWrite32(0xE6838D, 0x90909090);
 				return;
 			}
 
-			WriteRelCall(0x00E68DCD, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9Ex));
+			//WriteRelCall(0x00E68DCD, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9Ex));
 		}
 		else
 		{

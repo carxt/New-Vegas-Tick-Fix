@@ -3,9 +3,15 @@
 #pragma comment(lib, "winmm.lib")
 #include "SafeWrite.h"
 
+UInt32 ChangeTileLock1();
+void __stdcall ChangeTileLock2(DWORD* toExchange);
+UInt32 __fastcall FNV1aNumberHasher(NiTPointerMap<void*>* thisMap, void* edx, DWORD key);
+//UInt32 __fastcall FNV1aStringHasher(NiTPointerMap<void*>* thisMap, void* edx, char* key);
+UInt32 __fastcall FNV1aStringHasherCaseSensitive(NiTPointerMap<void*>* thisMap, void* edx, char* str);
+UInt32 __fastcall FNV1aStringHasherCaseInsensitive(NiTPointerMap<void*>* thisMap, void* edx, char* str);
 
-
-
+UInt32 __fastcall MurmurHash2(NiTPointerMap<void*>* thisMap, void* edx, DWORD k);
+UInt32 __fastcall OriginalHash(NiTPointerMap<void*>* thisMap, void* edx, DWORD key);
 
 void NopFunctionCall(UInt32 addr, UInt32 numArgs = 0)
 {
@@ -958,270 +964,508 @@ _declspec(naked) UInt32 __fastcall tListGetSize(tList<void*>* list)
 char* tListGetSize = "\x33\xC0\x80\x39\x00\x75\x01\xC3\x8B\x49\x04\x40\x85\xC9\x74\x08\x8B\x49\x04\x40\x85\xC9\x75\xF8\xC3";
 
 
+
+
+
 void HookInlines()
 {
-
-	SafeWriteBuf(0x57CBE0, sub_57CBE0, 16);
-	//	SafeWriteBuf(0x476930, sub_476930, 35);
-	SafeWriteBuf(0x65B390, sub_65B390, 33);
-	SafeWriteBuf(0x456630, NiTimeController__ChecksArg0andUnk030isNotNull, 16);
-	SafeWriteBuf(0x43F8D0, NiMatrix33__Multiply, 391);
-	SafeWriteBuf(0xA7FDD0, sub_A7FDD0, 198);
-
-	// replace calls to sub_AC3300
-	for (UInt32 patchAddr : {0xAB35E4, 0xABC03A, 0xACADF2, 0xAD1358, 0xAD1772})
+	if (g_bHeavyInlines) 
 	{
-		WriteRelCall(patchAddr, UInt32(sub_AC3300));
+		WriteRelCall(0x0AA6AC9, UInt32(HookHotSpot1));
+		WriteRelCall(0x61A3F9, UInt32(TESTopic__Compare));
+		WriteRelCall(0x61A654, UInt32(TESTopic__Compare));
+
+		for (UInt32 patchAddr : {0x618779, 0x6199E1, 0x619CD0, 0x619DBC, 0x619EA4, 0x619EED})
+		{
+			WriteRelCall(patchAddr, UInt32(TESTopic_getTopicInfoByIndex));
+		}
+
+		WriteRelCall(0x6198A9, UInt32(TESTopic_getTopicInfoByID));
+		WriteRelCall(0x61A35D, UInt32(TESTopic_getTopicInfoByID));
+
+		WriteRelCall(0xA6967D, UInt32(InlinedA694E0));
+		WriteRelCall(0xC4EF85, UInt32(InlinedA694E0));
+
+		//	WriteRelCall(0x4617C4, UInt32(sub_61F360)); untested
+
+		WriteRelJump(0xA1E380, UInt32(StringNiTMap__Lookup));
+		WriteRelJump(0x853130, UInt32(StringNiTMap__Lookup));
+		WriteRelJump(0x0438AF0, UInt32(NiTMapBase_FreeBuckets));
 	}
+	if (g_bLightInlines) {
+		SafeWriteBuf(0x57CBE0, sub_57CBE0, 16);
+		//	SafeWriteBuf(0x476930, sub_476930, 35);
+		SafeWriteBuf(0x65B390, sub_65B390, 33);
+		SafeWriteBuf(0x456630, NiTimeController__ChecksArg0andUnk030isNotNull, 16);
+		SafeWriteBuf(0x43F8D0, NiMatrix33__Multiply, 391);
+		SafeWriteBuf(0xA7FDD0, sub_A7FDD0, 198);
 
-	// replace calls to FaceGenData__Iterator__FaceGenData__GetUnk00
-	for (UInt32 patchAddr : {0x60B92F, 0x60B948, 0x64DDC2, 0x64DE12, 0x6591B2, 0x65DB02})
-	{
-		WriteRelCall(patchAddr, UInt32(sub_60B980));
+		// replace calls to sub_AC3300
+		for (UInt32 patchAddr : {0xAB35E4, 0xABC03A, 0xACADF2, 0xAD1358, 0xAD1772})
+		{
+			WriteRelCall(patchAddr, UInt32(sub_AC3300));
+		}
+
+		// replace calls to FaceGenData__Iterator__FaceGenData__GetUnk00
+		for (UInt32 patchAddr : {0x60B92F, 0x60B948, 0x64DDC2, 0x64DE12, 0x6591B2, 0x65DB02})
+		{
+			WriteRelCall(patchAddr, UInt32(sub_60B980));
+		}
+		SafeWriteBuf(0x5CA4F0, "\x83\x39\x00\x0F\x95\xC0\xC3", 7);
+
+		SafeWriteBuf(0x64DDA0, "\x8B\x41\x04\xC3", 4);
+
+		//SafeWriteBuf(0x6C6A60, sub_6C6A60, 18); removed, conflicts with Tick Fix hashtables
+
+		SafeWriteBuf(0xAE8DC0, intsAreEqual, 18);
+		SafeWriteBuf(0x6B81D0, intsAreEqual, 18);
+
+		SafeWriteBuf(0x401050, wait, 39);
+
+		// replace functions with compiler optimised versions
+
+
+		SafeWriteBuf(0x0576D30, Inline576D30, 13);
+		SafeWriteBuf(0x595C80, Inline595C80, 32);
+		SafeWriteBuf(0x416870, Inline416870, 37);
+		SafeWriteBuf(0x439EF0, Inline439EF0, 53);
+		SafeWriteBuf(0x49DA80, Inline49DA80, 72);
+
+		// optimise GetSettingValue's
+		// int
+		SafeWriteBuf(0x43D4D0, leaEaxEcxPlus4, 4);
+
+		// float
+		SafeWriteBuf(0x403E20, leaEaxEcxPlus4, 4);
+
+		// string
+		SafeWriteBuf(0x403DF0, GetStringSetting, 11);
+
+		// float*
+		SafeWriteBuf(0x408D60, leaEaxEcxPlus4, 4);
+
+		// remove calls to FormatString in memory allocation functions
+		WriteRelJump(0x0AA946D, 0x0AA94CB);
+		WriteRelJump(0x0AA92B1, 0x0AA9310);
+		WriteRelJump(0xAA964E, 0x0AA96AF);
+
+		// TESForm::GetTypeID
+		SafeWriteBuf(0x401150, movzxEaxECXplus4, 5);
+
+		// TESForm::GetTypeID
+		SafeWriteBuf(0x401170, movzxEaxECXplus4, 5);
+
+		// inlines calls to set tls
+		SafeWriteBuf(0x404EE0, "\xFF\x31\xE8\x49\x00\x00\x00\x83\xC4\x04\xC3", 11); // push [ecx]; call ...  ; add esp, 4; ret
+
+		// modelToWorld
+		// FLD ST0, DWORD PTR DS:[0x011C582C]
+		// FMUL ST0, DWORD PTR SS : [ESP + 0x4]
+		// ret
+		SafeWriteBuf(0x4A3E90, "\xD9\x05\x2C\x58\x1C\x01\xD8\x4C\x24\x04\xC3", 11);
+
+		// FormHeap::Free
+		SafeWriteBuf(0x401030, "\xFF\x74\x24\x04\xB9\x38\x62\x1F\x01\xE8\x22\x30\x6A\x00\xC3", 15); // push [esp+4]; mov ecx, g_formHeap; call Game__MemoryPoolFree; ret
+
+		// FormHeap::Allocate
+		SafeWriteBuf(0x401000, "\xFF\x74\x24\x04\xB9\x38\x62\x1F\x01\xE8\x32\x2E\x6A\x00\xC3", 15); // push [esp+4]; mov ecx, g_formHeap; call Game__MemoryPoolAllocate; ret
+
+		// this
+		SafeWriteBuf(0x6815C0, "\x8B\xC1\xC3", 3); // mov eax, ecx; ret
+
+		// this[1]
+		SafeWriteBuf(0x726070, "\x8B\x41\x04\xC3", 4);
+
+		// this[3]
+		SafeWriteBuf(0x84E3A0, "\x8B\x41\x0C\xC3", 4);
+
+		// this[5]
+		SafeWriteBuf(0x825C00, "\x8B\x41\x14\xC3", 4);
+
+		// NiTArray__calcOffsetForArrayOfUInt32
+		SafeWriteBuf(0x877A30, "\x8B\x49\x04\x8B\x44\x24\x04\x8D\x04\x81\xC2\x04\x00", 13);
+
+		// skip over useless formatString when loading
+		WriteRelJump(0x467A84, 0x467B0E);
+
+		// this + 4
+		SafeWriteBuf(0x717E50, "\x8B\xC1\x83\xC0\x04\xC3", 6);
+
+		// TESMobileObject__GetBaseProcess
+		SafeWriteBuf(0x8D8520, "\x8B\x41\x68\xC3", 4);
+		// inline frequent calls to it
+		SafeWriteBuf(0x96B1FA, "\x8B\x41\x68\x90\x90", 5);
+		SafeWriteBuf(0x96B3DD, "\x8B\x41\x68\x90\x90", 5);
+
+		// BaseProcess__GetProcessLevel
+		SafeWriteBuf(0x45CD60, "\x8B\x41\x28\xC3", 4);
+
+		// actually inline BaseProcess__GetProcessLevel in some function that calls it repeatedly
+		SafeWriteBuf(0x96B240, "\x83\x79\x28\x03\x74\x15\x90\x90\x90\x90", 10);
+
+		// this + 8
+		SafeWriteBuf(0x413F40, "\x8B\xC1\x83\xC0\x08\xC3", 6);
+
+
+		// return 0
+		SafeWriteBuf(0x8D0370, "\x32\xC0\xC2\x04\x00", 5);
+
+		// unused array function
+		SafeWriteBuf(0x72BA80, "\xC2\x08\x00", 3); // ret 8
+
+		// this[2]isZero
+		SafeWriteBuf(0x76B610, "\x83\x79\x08\x00\x0F\x94\xC0\xC3", 8); // cmp [ecx + 8], 0; sete al; ret
+
+		// return1
+		SafeWriteBuf(0x401290, "\xB0\x01\xC2\x04\x00", 5); // mov al, 1; ret
+
+		// return empty string
+		SafeWriteBuf(0x401280, "\xB8\x84\x15\x01\x01\xC3", 6);
+
+		// fillchar
+		WriteRelJump(0x403D30, 0xEC61C0);
+
+		// nullsub
+		SafeWrite8(0x483710, 0xC3);
+		SafeWrite32(0x4534F0, 0xCC0004C2);
+
+		// GetFormHeap
+		SafeWriteBuf(0x401020, "\xB8\x38\x62\x1F\x01\xC3", 6);
+
+		// tList_isEmpty
+		SafeWriteBuf(0x8256D0, tList_isEmpty, 19);
+
+		// some havok
+		SafeWriteBuf(0x4A3E00, (char*)Sub_4A3E00_Hook, 0x2B);
+
+		// optimise an audio function's loop
+		SafeWrite32(0xAEBE01, 0x1BEBE87D);
+		SafeWriteBuf(0xAEBE20, "\x3B\x7D\xCC\x73\x62\x8B\x75\x94\x3B\x75", 10);
+		SafeWriteBuf(0xAEBE6E, "\x8A\x0E\x88\x0C\x3A\xFF\x45\x94\x47\xEB\xA7", 11);
+
+		// remove useless push args call pop args for calls to __cdecl function by just jumping to it
+		WriteRelJump(0x4EDE70, 0xAA10F0);
+
+		// remove calls to dereference in frequently called places
+		// NiNode__GetParent
+		SafeWrite32(0x6838B0, 0xC31C418B);
+		// SceneGraph__GetCamera
+		SafeWriteBuf(0x6629F0, "\x8B\x81\xAC\x00\x00\x00\xC3", 7);
+		// inline calls to it
+		SafeWriteBuf(0x6FA89E, "\x8B\x89\xAC\x00\x00\x00\x90", 7);
+		SafeWriteBuf(0x6FA8C8, "\x8B\x89\xAC\x00\x00\x00\x90", 7);
+		SafeWriteBuf(0x6FA8F2, "\x8B\x89\xAC\x00\x00\x00\x90", 7);
+
+		// TESObjectREFR__GetNiNode
+		SafeWriteBuf(0x43FD1D, "\x8B\x41\x14\x89\x45\xF4\xEB\x0C", 8);
+		// NiObjectNet_GetController
+		SafeWrite32(0x43B230, 0xC30C418B); // replace return dereference(&(ecx+c)); with return ecx+c
+		// inline some frequent calls to NiObjectNet_GetController
+		SafeWriteBuf(0x4EFFA6, "\x8B\x41\x0C\x85\xC0\x74\x16\x90\x90", 9);
+		SafeWriteBuf(0x4EFFC8, "\x8B\x41\x0C\x90\x90", 5);
+		SafeWriteBuf(0x6FA8A5, "\x8B\x41\x0C\x90\x90", 5);
+		SafeWriteBuf(0x6FA8CF, "\x8B\x41\x0C\x90\x90", 5);
+		SafeWriteBuf(0x6FA8F9, "\x8B\x41\x0C\x90\x90", 5);
+
+		// TESForm__GetFlags
+		SafeWrite32(0x44DDC0, 0xC308418B);
+		SafeWrite32(0X620B80, 0xC308418B);
+
+		// inline call to TESForm__GetFlags
+		SafeWriteBuf(0x43B540, "\x83\xC1\x14\x8B\x41\x08\xC3", 7);
+
+		// BSExtraData__GetType
+		SafeWriteBuf(0x4F1540, "\x8A\x41\x04\xC3", 4);
+		// inline call to it
+		SafeWriteBuf(0x410286, "\x8A\x41\x04\x3A\x45\x08\x75\x20\xEB\x06\x90\x90\x90\x90\x90\x90", 16);
+
+		// minor inlines for sub_61F360 till the function is rewritten
+		SafeWriteBuf(0x61F382, "\x84\xC0\x74\x11\x90\x90\x90", 7);
+		SafeWriteBuf(0x61F3B3, "\x45\xFC\x8B\x08\x89\x4D\xF8\x3B\x4D\x08\x75\x0A\xEB\x54", 16);
+		SafeWriteBuf(0x61F3F1, "\x8B\x41\x04\x85\xC0\x75\x10\x90\x90", 9);
+		SafeWriteBuf(0x61F40B, "\x8B\x41\x04\xEB\x8A", 5);
+		SafeWriteBuf(0x61F398, "\x45\x0C\x89\x45\xFC\x85\xC0\x74\x74\x90\x90", 11);
+
+		// TESForm__IsDisabled
+		SafeWriteBuf(0x440DA0, "\x8B\x41\x08\xA9\x00\x08\x00\x00\x0F\x95\xC0\xC3", 12);
+
+		// TESObjectREFR__GetBaseForm_getUnk020
+		SafeWrite32(0x7AF430, 0xC320418B);
+		SafeWrite32(0x4181E0, 0xC320418B);
+
+		Jazz::WriteHooks();
+
+		// skip redundant check whether item is in right items list in ContainerMenu::ShouldHideItem
+		SafeWrite8(0x75E694, 0x29);
+
+		// remove calls to InterlockedIncrement and InterlockedDecrement for a counter for the number of Nifs (it's never checked)
+		const UInt32 numRefsInterlockIndirectCalls[] =
+		{
+			0xA5D3B5, 0xA5D3DB, 0xA5D4EE, 0xA76665, 0xA766BB, 0xA76BEB, 0xA8F455, 0xA9BE95, 0xA9BEBE, 0xAA03A4, 0xAF7F58, 0xAF8EE7, 0xB592DC, 0xB60B24, 0xB66825, 0xB668A2,
+			0xB668EA, 0xB9FDDB, 0xBB33D5, 0xBB34D2, 0xBB398A, 0xBB3B6B, 0xC1CF35, 0xC5AA10, 0xC5AE55, 0xE7D20B, 0xE7D277, 0xE7D3B6, 0xE7D53B, 0xE7D65F, 0xE7D6D7, 0xE7D876,
+			0xE7D954, 0xE7DC2F, 0xE81BB4, 0xE877E6, 0xE881B7, 0xE897E4, 0xE89896, 0xE8D0B9, 0xE8D0F6, 0xE8EAE4, 0xE8FA60, 0xE8FB36, 0xE90A95, 0xE90AE6, 0xE93AE5, 0xE93E59,
+			0xE98924, 0xE98A5F, 0xEE9C04, 0xEE9DED, 0xEEA594,
+		};
+
+		for (UInt32 patchAddr : numRefsInterlockIndirectCalls)
+		{
+			NopIndirectCall(patchAddr, 1);
+		}
+
+		const UInt32 numRefsInterlockRegCalls[] =
+		{
+			0xA76ADD, 0xA8F4BC, 0xA8F4FC, 0xA8F84B, 0xA8F96E, 0xA8F9EB, 0xA8FE0F, 0xA8FE8D, 0xAA00EC, 0xAA01C8, 0xAA06A3, 0xB58299, 0xB60C4D, 0xB66AB9, 0xB9F463, 0xC1D690,
+			0xE81C4F, 0xE88BA5, 0xE8EB55, 0xEE9AFE, 0xEEA64A
+		};
+
+		for (UInt32 patchAddr : numRefsInterlockRegCalls)
+		{
+			SafeWrite16(patchAddr, 0x9058); // pop eax
+		}
+
+		NopFunctionCall(0x4968CF);
+		NopFunctionCall(0x496925);
+
+		// remove unnecessary call checking ref type when rendering a ref
+		SafeWrite16(0xB55B89, 0x10EB);
+		SafeWrite8(0xB55360, 0xC3);
+
+
+		//inline float sum
+		SafeWriteBuf(0x6B9710, "\xD9\x01\xD8\x41\x04\xC3", 6);
+
+		// remove shadow scene critical sections
+	//	SafeWrite32(0xB5D9F0, 0xCC0008C2);
+
+		//Stop a loop that essentially checks bMTRenderer which never is true so it just wastes time
+
+		// remove some threading exterior cell loader task check that would lock up if moving around too quickly
+	//	SafeWrite16(0x5289D3, 0x9090);
 	}
-	SafeWriteBuf(0x5CA4F0, "\x83\x39\x00\x0F\x95\xC0\xC3", 7);
-
-	SafeWriteBuf(0x64DDA0, "\x8B\x41\x04\xC3", 4);
-
-	SafeWriteBuf(0x6C6A60, sub_6C6A60, 18);
-
-	SafeWriteBuf(0xAE8DC0, intsAreEqual, 18);
-	SafeWriteBuf(0x6B81D0, intsAreEqual, 18);
-
-	SafeWriteBuf(0x401050, wait, 39);
-
-	// replace functions with compiler optimised versions
-	WriteRelCall(0x0AA6AC9, UInt32(HookHotSpot1));
-	WriteRelCall(0x61A3F9, UInt32(TESTopic__Compare));
-	WriteRelCall(0x61A654, UInt32(TESTopic__Compare));
-
-	for (UInt32 patchAddr : {0x618779, 0x6199E1, 0x619CD0, 0x619DBC, 0x619EA4, 0x619EED})
-	{
-		WriteRelCall(patchAddr, UInt32(TESTopic_getTopicInfoByIndex));
-	}
-
-	WriteRelCall(0x6198A9, UInt32(TESTopic_getTopicInfoByID));
-	WriteRelCall(0x61A35D, UInt32(TESTopic_getTopicInfoByID));
-
-	WriteRelCall(0xA6967D, UInt32(InlinedA694E0));
-	WriteRelCall(0xC4EF85, UInt32(InlinedA694E0));
-
-	//	WriteRelCall(0x4617C4, UInt32(sub_61F360)); untested
-
-	WriteRelJump(0xA1E380, UInt32(StringNiTMap__Lookup));
-	WriteRelJump(0x853130, UInt32(StringNiTMap__Lookup));
-	WriteRelJump(0x0438AF0, UInt32(NiTMapBase_FreeBuckets));
-
-	SafeWriteBuf(0x0576D30, Inline576D30, 13);
-	SafeWriteBuf(0x595C80, Inline595C80, 32);
-	SafeWriteBuf(0x416870, Inline416870, 37);
-	SafeWriteBuf(0x439EF0, Inline439EF0, 53);
-	SafeWriteBuf(0x49DA80, Inline49DA80, 72);
-
-	// optimise GetSettingValue's
-	// int
-	SafeWriteBuf(0x43D4D0, leaEaxEcxPlus4, 4);
-
-	// float
-	SafeWriteBuf(0x403E20, leaEaxEcxPlus4, 4);
-
-	// string
-	SafeWriteBuf(0x403DF0, GetStringSetting, 11);
-
-	// float*
-	SafeWriteBuf(0x408D60, leaEaxEcxPlus4, 4);
-
-	// remove calls to FormatString in memory allocation functions
-	WriteRelJump(0x0AA946D, 0x0AA94CB);
-	WriteRelJump(0x0AA92B1, 0x0AA9310);
-	WriteRelJump(0xAA964E, 0x0AA96AF);
-
-	// TESForm::GetTypeID
-	SafeWriteBuf(0x401150, movzxEaxECXplus4, 5);
-
-	// TESForm::GetTypeID
-	SafeWriteBuf(0x401170, movzxEaxECXplus4, 5);
-
-	// inlines calls to set tls
-	SafeWriteBuf(0x404EE0, "\xFF\x31\xE8\x49\x00\x00\x00\x83\xC4\x04\xC3", 11); // push [ecx]; call ...  ; add esp, 4; ret
-
-	// modelToWorld
-	// FLD ST0, DWORD PTR DS:[0x011C582C]
-	// FMUL ST0, DWORD PTR SS : [ESP + 0x4]
-	// ret
-	SafeWriteBuf(0x4A3E90, "\xD9\x05\x2C\x58\x1C\x01\xD8\x4C\x24\x04\xC3", 11);
-
-	// FormHeap::Free
-	SafeWriteBuf(0x401030, "\xFF\x74\x24\x04\xB9\x38\x62\x1F\x01\xE8\x22\x30\x6A\x00\xC3", 15); // push [esp+4]; mov ecx, g_formHeap; call Game__MemoryPoolFree; ret
-
-	// FormHeap::Allocate
-	SafeWriteBuf(0x401000, "\xFF\x74\x24\x04\xB9\x38\x62\x1F\x01\xE8\x32\x2E\x6A\x00\xC3", 15); // push [esp+4]; mov ecx, g_formHeap; call Game__MemoryPoolAllocate; ret
-
-	// this
-	SafeWriteBuf(0x6815C0, "\x8B\xC1\xC3", 3); // mov eax, ecx; ret
-
-	// this[1]
-	SafeWriteBuf(0x726070, "\x8B\x41\x04\xC3", 4);
-
-	// this[3]
-	SafeWriteBuf(0x84E3A0, "\x8B\x41\x0C\xC3", 4);
-
-	// this[5]
-	SafeWriteBuf(0x825C00, "\x8B\x41\x14\xC3", 4);
-
-	// NiTArray__calcOffsetForArrayOfUInt32
-	SafeWriteBuf(0x877A30, "\x8B\x49\x04\x8B\x44\x24\x04\x8D\x04\x81\xC2\x04\x00", 13);
-
-	// skip over useless formatString when loading
-	WriteRelJump(0x467A84, 0x467B0E);
-
-	// this + 4
-	SafeWriteBuf(0x717E50, "\x8B\xC1\x83\xC0\x04\xC3", 6);
-
-	// TESMobileObject__GetBaseProcess
-	SafeWriteBuf(0x8D8520, "\x8B\x41\x68\xC3", 4);
-	// inline frequent calls to it
-	SafeWriteBuf(0x96B1FA, "\x8B\x41\x68\x90\x90", 5);
-	SafeWriteBuf(0x96B3DD, "\x8B\x41\x68\x90\x90", 5);
-
-	// BaseProcess__GetProcessLevel
-	SafeWriteBuf(0x45CD60, "\x8B\x41\x28\xC3", 4);
-
-	// actually inline BaseProcess__GetProcessLevel in some function that calls it repeatedly
-	SafeWriteBuf(0x96B240, "\x83\x79\x28\x03\x74\x15\x90\x90\x90\x90", 10);
-
-	// this + 8
-	SafeWriteBuf(0x413F40, "\x8B\xC1\x83\xC0\x08\xC3", 6);
-
-
-	// return 0
-	SafeWriteBuf(0x8D0370, "\x32\xC0\xC2\x04\x00", 5);
-
-	// unused array function
-	SafeWriteBuf(0x72BA80, "\xC2\x08\x00", 3); // ret 8
-
-	// this[2]isZero
-	SafeWriteBuf(0x76B610, "\x83\x79\x08\x00\x0F\x94\xC0\xC3", 8); // cmp [ecx + 8], 0; sete al; ret
-
-	// return1
-	SafeWriteBuf(0x401290, "\xB0\x01\xC2\x04\x00", 5); // mov al, 1; ret
-
-	// return empty string
-	SafeWriteBuf(0x401280, "\xB8\x84\x15\x01\x01\xC3", 6);
-
-	// fillchar
-	WriteRelJump(0x403D30, 0xEC61C0);
-
-	// nullsub
-	SafeWrite8(0x483710, 0xC3);
-	SafeWrite32(0x4534F0, 0xCC0004C2);
-
-	// GetFormHeap
-	SafeWriteBuf(0x401020, "\xB8\x38\x62\x1F\x01\xC3", 6);
-
-	// tList_isEmpty
-	SafeWriteBuf(0x8256D0, tList_isEmpty, 19);
-
-	// some havok
-	SafeWriteBuf(0x4A3E00, (char*)Sub_4A3E00_Hook, 0x2B);
-
-	// optimise an audio function's loop
-	SafeWrite32(0xAEBE01, 0x1BEBE87D);
-	SafeWriteBuf(0xAEBE20, "\x3B\x7D\xCC\x73\x62\x8B\x75\x94\x3B\x75", 10);
-	SafeWriteBuf(0xAEBE6E, "\x8A\x0E\x88\x0C\x3A\xFF\x45\x94\x47\xEB\xA7", 11);
-
-	// remove useless push args call pop args for calls to __cdecl function by just jumping to it
-	WriteRelJump(0x4EDE70, 0xAA10F0);
-
-	// remove calls to dereference in frequently called places
-	// NiNode__GetParent
-	SafeWrite32(0x6838B0, 0xC31C418B);
-	// SceneGraph__GetCamera
-	SafeWriteBuf(0x6629F0, "\x8B\x81\xAC\x00\x00\x00\xC3", 7);
-	// inline calls to it
-	SafeWriteBuf(0x6FA89E, "\x8B\x89\xAC\x00\x00\x00\x90", 7);
-	SafeWriteBuf(0x6FA8C8, "\x8B\x89\xAC\x00\x00\x00\x90", 7);
-	SafeWriteBuf(0x6FA8F2, "\x8B\x89\xAC\x00\x00\x00\x90", 7);
-
-	// TESObjectREFR__GetNiNode
-	SafeWriteBuf(0x43FD1D, "\x8B\x41\x14\x89\x45\xF4\xEB\x0C", 8);
-	// NiObjectNet_GetController
-	SafeWrite32(0x43B230, 0xC30C418B); // replace return dereference(&(ecx+c)); with return ecx+c
-	// inline some frequent calls to NiObjectNet_GetController
-	SafeWriteBuf(0x4EFFA6, "\x8B\x41\x0C\x85\xC0\x74\x16\x90\x90", 9);
-	SafeWriteBuf(0x4EFFC8, "\x8B\x41\x0C\x90\x90", 5);
-	SafeWriteBuf(0x6FA8A5, "\x8B\x41\x0C\x90\x90", 5);
-	SafeWriteBuf(0x6FA8CF, "\x8B\x41\x0C\x90\x90", 5);
-	SafeWriteBuf(0x6FA8F9, "\x8B\x41\x0C\x90\x90", 5);
-
-	// TESForm__GetFlags
-	SafeWrite32(0x44DDC0, 0xC308418B);
-	SafeWrite32(0X620B80, 0xC308418B);
-
-	// inline call to TESForm__GetFlags
-	SafeWriteBuf(0x43B540, "\x83\xC1\x14\x8B\x41\x08\xC3", 7);
-
-	// BSExtraData__GetType
-	SafeWriteBuf(0x4F1540, "\x8A\x41\x04\xC3", 4);
-	// inline call to it
-	SafeWriteBuf(0x410286, "\x8A\x41\x04\x3A\x45\x08\x75\x20\xEB\x06\x90\x90\x90\x90\x90\x90", 16);
-
-	// minor inlines for sub_61F360 till the function is rewritten
-	SafeWriteBuf(0x61F382, "\x84\xC0\x74\x11\x90\x90\x90", 7);
-	SafeWriteBuf(0x61F3B3, "\x45\xFC\x8B\x08\x89\x4D\xF8\x3B\x4D\x08\x75\x0A\xEB\x54", 16);
-	SafeWriteBuf(0x61F3F1, "\x8B\x41\x04\x85\xC0\x75\x10\x90\x90", 9);
-	SafeWriteBuf(0x61F40B, "\x8B\x41\x04\xEB\x8A", 5);
-	SafeWriteBuf(0x61F398, "\x45\x0C\x89\x45\xFC\x85\xC0\x74\x74\x90\x90", 11);
-
-	// TESForm__IsDisabled
-	SafeWriteBuf(0x440DA0, "\x8B\x41\x08\xA9\x00\x08\x00\x00\x0F\x95\xC0\xC3", 12);
-
-	// TESObjectREFR__GetBaseForm_getUnk020
-	SafeWrite32(0x7AF430, 0xC320418B);
-	SafeWrite32(0x4181E0, 0xC320418B);
-
-	Jazz::WriteHooks();
-
-	// skip redundant check whether item is in right items list in ContainerMenu::ShouldHideItem
-	SafeWrite8(0x75E694, 0x29);
-
-	// remove calls to InterlockedIncrement and InterlockedDecrement for a counter for the number of Nifs (it's never checked)
-	const UInt32 numRefsInterlockIndirectCalls[] =
-	{
-		0xA5D3B5, 0xA5D3DB, 0xA5D4EE, 0xA76665, 0xA766BB, 0xA76BEB, 0xA8F455, 0xA9BE95, 0xA9BEBE, 0xAA03A4, 0xAF7F58, 0xAF8EE7, 0xB592DC, 0xB60B24, 0xB66825, 0xB668A2,
-		0xB668EA, 0xB9FDDB, 0xBB33D5, 0xBB34D2, 0xBB398A, 0xBB3B6B, 0xC1CF35, 0xC5AA10, 0xC5AE55, 0xE7D20B, 0xE7D277, 0xE7D3B6, 0xE7D53B, 0xE7D65F, 0xE7D6D7, 0xE7D876,
-		0xE7D954, 0xE7DC2F, 0xE81BB4, 0xE877E6, 0xE881B7, 0xE897E4, 0xE89896, 0xE8D0B9, 0xE8D0F6, 0xE8EAE4, 0xE8FA60, 0xE8FB36, 0xE90A95, 0xE90AE6, 0xE93AE5, 0xE93E59,
-		0xE98924, 0xE98A5F, 0xEE9C04, 0xEE9DED, 0xEEA594,
-	};
-
-	for (UInt32 patchAddr : numRefsInterlockIndirectCalls)
-	{
-		NopIndirectCall(patchAddr, 1);
-	}
-
-	const UInt32 numRefsInterlockRegCalls[] =
-	{
-		0xA76ADD, 0xA8F4BC, 0xA8F4FC, 0xA8F84B, 0xA8F96E, 0xA8F9EB, 0xA8FE0F, 0xA8FE8D, 0xAA00EC, 0xAA01C8, 0xAA06A3, 0xB58299, 0xB60C4D, 0xB66AB9, 0xB9F463, 0xC1D690,
-		0xE81C4F, 0xE88BA5, 0xE8EB55, 0xEE9AFE, 0xEEA64A
-	};
-
-	for (UInt32 patchAddr : numRefsInterlockRegCalls)
-	{
-		SafeWrite16(patchAddr, 0x9058); // pop eax
-	}
-
-	NopFunctionCall(0x4968CF);
-	NopFunctionCall(0x496925);
-
-	// remove unnecessary call checking ref type when rendering a ref
-	SafeWrite16(0xB55B89, 0x10EB);
-	SafeWrite8(0xB55360, 0xC3);
-
-
-	// remove shadow scene critical sections
-//	SafeWrite32(0xB5D9F0, 0xCC0008C2);
-
-	// remove some threading exterior cell loader task check that would lock up if moving around too quickly
-//	SafeWrite16(0x5289D3, 0x9090);
 }
+
+
+
+NiTPointerMap<int>* g_EarlyMap1 = (NiTPointerMap<int>*) 0x011F3308;
+NiTPointerMap<void*>* g_TileMap = (NiTPointerMap<void*>*) 0x11F3358;
+
+void DoHashTableStuff()
+{
+	if (g_bResizeHashtables) {
+		SafeWrite32(0x00473F69, 5005);
+		SafeWrite32(0x00583FF6, 1703);
+		SafeWrite32(0x006B5C76, 10009);
+		SafeWrite32(0x006B7A30, 2809);
+		SafeWrite32(0x00845558, 7049);
+		SafeWrite32(0x00846FFB, 12041);
+		//SafeWrite32(0x00846FFB, 5031);
+
+		SafeWrite32(0x00848072, 12041);
+
+		SafeWrite8(0x00544FA7, 39);
+		SafeWrite8(0x00544FC9, 29);
+		SafeWrite8(0x00582CA2, 119);
+		SafeWrite8(0x00582CEF, 49);
+		SafeWrite8(0x00582D64, 31);
+		SafeWrite8(0x00587AC9, 43);
+		SafeWrite8(0x006C02F8, 121);
+		SafeWrite8(0x006C035F, 95);
+		SafeWrite8(0x006C0397, 97);
+		SafeWrite8(0x006C03AB, 89);
+		SafeWrite8(0x006E13AF, 53);
+		SafeWrite8(0x0084703E, 57);
+		SafeWrite8(0x008470FA, 55);
+		SafeWrite8(0x0084AB60, 117);
+		SafeWrite8(0x00AD9169, 111);
+		SafeWrite8(0x00AD9189, 111);
+		SafeWrite8(0x00AD91A9, 111);
+		SafeWrite8(0x00AD91CC, 39);
+		//6o
+		SafeWrite32(0x00A2EFDF, 604);
+		SafeWrite32(0x00A2EFED, 151);
+		SafeWrite32(0x00A660B7, 636);
+		SafeWrite32(0x00A660C4, 159);
+		SafeWrite32(0x00B61841, 1204);
+		SafeWrite32(0x00B61854, 301);
+		SafeWrite32(0x00B7FF73, 988);
+		SafeWrite32(0x00B7FF85, 247);
+		SafeWrite32(0x00B9A5EB, 628);
+		SafeWrite32(0x00B9A5FD, 157);
+
+		if (g_TileMap->m_numItems == 0)
+		{
+			delete g_TileMap;
+			ThisStdCall(0xA0D8E0, g_TileMap, 8701);
+			*(UInt32*)g_TileMap = 0x1094E7C;
+		}
+
+		if (g_EarlyMap1->m_numItems == 0)
+		{
+			delete g_EarlyMap1;
+			ThisStdCall(0xA0D710, g_EarlyMap1, (4*371) );
+			*(UInt32*)g_EarlyMap1 = 0x1094E3C;
+		}
+	}
+
+	if (g_bReplaceHashingAlgorithm) 
+	{
+
+		for (UInt32 patchAddr : {0x049C4C0, /*0x6C6A60,*/ 0x0A0D260, 0x0863C70, 0x0A63840, 0x069B620}) //numeric hashes
+		{
+			WriteRelJump(patchAddr, (UInt32)FNV1aNumberHasher);
+
+		}
+
+		/*for (UInt32 patchAddr : {0x106CF6C, 0x107ED6C, 0x1031FF0, 0x1031FD0 }) //numeric hashes
+		{
+			SafeWrite32(patchAddr, (UInt32)FNV1aNumberHasher);
+
+		}*/
+
+		//string hashes
+
+		for (UInt32 patchAddr : {0x101CABC, 0x104A044, 0x1065874}) 
+		{
+			SafeWrite32(patchAddr, (UInt32)FNV1aStringHasherCaseInsensitive);
+
+		}
+		for (UInt32 patchAddr : {0x0A0D1B0, 0x0EC1D50})
+		{
+			WriteRelJump(patchAddr, (UInt32)FNV1aStringHasherCaseInsensitive);
+
+		}
+		for (UInt32 patchAddr : {0x0486DF0, 0x0A0D440, 0x0A4D6D0, 0x0EC1C30})
+		{
+			WriteRelJump(patchAddr, (UInt32)FNV1aStringHasherCaseSensitive);
+
+		}
+	}
+
+
+}
+std::hash <DWORD> IntegerHasher;
+std::hash <std::string> StringHasher;
+
+
+UInt32 __fastcall stdNumberHasher(NiTPointerMap<void*>* thisMap, void* edx, DWORD key)
+{
+	return IntegerHasher(key) % thisMap->m_numBuckets;
+}
+
+UInt32 __fastcall FNV1aNumberHasher(NiTPointerMap<void*>* thisMap, void* edx, DWORD key)
+{
+	const unsigned int fnv_prime = 16777619;
+	unsigned int hash = 0x811c9dc5;
+	BYTE* keyPTR = (BYTE*)&key;
+	hash ^= (keyPTR[0]);
+	hash *= fnv_prime;
+
+	hash ^= (keyPTR[1]);
+	hash *= fnv_prime;
+
+	hash ^= (keyPTR[2]);
+	hash *= fnv_prime;
+
+	hash ^= (keyPTR[3]);
+	hash *= fnv_prime;
+
+
+	return hash % thisMap->m_numBuckets;
+}
+
+
+
+
+int (__cdecl* GameToLower)(int) = (int(__cdecl *)(int)) 0x0EC67AA;
+UInt32 __fastcall FNV1aStringHasherCaseInsensitive(NiTPointerMap<void*>* thisMap, void* edx, char* str)
+{
+	const unsigned int fnv_prime = 16777619;
+	unsigned int hash = 0x811c9dc5;
+	while (*str)
+	{
+		hash ^= (char) GameToLower(*str);
+		hash *= fnv_prime;
+		str++;
+	}
+
+	return hash % thisMap->m_numBuckets;
+}
+
+
+UInt32 __fastcall FNV1aStringHasherCaseSensitive(NiTPointerMap<void*>* thisMap, void* edx, char* str)
+{
+	const unsigned int fnv_prime = 16777619;
+	unsigned int hash = 0x811c9dc5;
+	while (*str)
+	{
+		hash ^= (*str);
+		hash *= fnv_prime;
+		str++;
+	}
+
+	return hash % thisMap->m_numBuckets;
+}
+
+
+UInt32 __fastcall OriginalHash(NiTPointerMap<void*>* thisMap, void* edx, DWORD key)
+{
+	return key % thisMap->m_numBuckets;
+}
+
+/*UInt32 __fastcall MurmurHash2(NiTPointerMap<void*>* thisMap, void* edx, DWORD k)
+{
+	int len = 4;
+	// 'm' and 'r' are mixing constants generated offline.
+	// They're not really 'magic', they just happen to work well.
+	const UInt32 m = 0x5bd1e995;
+	const int r = 24;
+	// Initialize the hash to a 'random' value
+
+	UInt32 h = 0x40 ^ len;
+	// Mix 4 bytes at a time into the hash
+
+	k *= m;
+	k ^= k >> r;
+	k *= m;
+
+	h *= m;
+	h ^= k;
+
+	// Do a few final mixes of the hash to ensure the last few
+	// bytes are well-incorporated.
+	h ^= h >> 13;
+	h *= m;
+	h ^= h >> 15;
+	return h % thisMap->m_numBuckets;
+}*/
+
+UInt32 ChangeTileLock1()
+{
+	static volatile UInt32* const SomeAtomicVar = (volatile UInt32*)0x11C5F58;
+	if (!*SomeAtomicVar)
+	{
+		ThisStdCall(0x40FBF0, (void*)0x11C5F80, 0); //EnterLCS
+		if (!*SomeAtomicVar)
+		{
+			ThisStdCall(0x43A080, NULL);
+		}
+		ThisStdCall(0x40FBA0, (void*)0x11C5F80); //LeaveLCS
+	}
+	DWORD* OldAtomicVar = (DWORD*) _InterlockedExchange(SomeAtomicVar, *SomeAtomicVar);
+	OldAtomicVar[0] = 0;
+	OldAtomicVar[1] = 0;
+	OldAtomicVar[2] = 0;
+	return (UInt32) OldAtomicVar;
+}
+
+
+
+void __stdcall ChangeTileLock2(DWORD* toExchange)
+{
+	static volatile UInt32* const SomeAtomicVar = (volatile UInt32*)0x11C5F58;
+	toExchange[1] = 0;
+	toExchange = (DWORD*)_InterlockedExchange(SomeAtomicVar, *SomeAtomicVar);
+}
+
+
 
