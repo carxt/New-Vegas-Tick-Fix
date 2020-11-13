@@ -87,6 +87,8 @@ extern "C" {
 		char floatbuffer[0x40];
 		g_iSpinCount = 0;// GetPrivateProfileInt("CS", "iSpinCount", -1, iniDir);
 		g_bFPSFix = GetPrivateProfileInt("GTC", "bFPSFix", 0, iniDir);
+		g_bAutomaticFPSFix = GetPrivateProfileInt("FPSFix", "bAutomaticFPSFix", 0, iniDir);
+
 		g_iMaxFPS = GetPrivateProfileInt("FPSFix", "iMaxFPSTolerance", 59, iniDir);
 		g_iMinFPS = GetPrivateProfileInt("FPSFix", "iMinFPSTolerance", 20, iniDir);
 		g_bfMaxTime = GetPrivateProfileInt("FPSFix", "bfMaxTime", 1, iniDir);

@@ -36,6 +36,7 @@ int g_bReplaceHashingAlgorithm;
 int g_bAlternateGTCFix = 0;
 int g_bLightInlines = 0;
 int g_bHeavyInlines = 0;
+int g_bAutomaticFPSFix = 0;
 
 
 #include "hooks.h"
@@ -43,7 +44,10 @@ int g_bHeavyInlines = 0;
 #include "GameUI.h"
 #include "direct3dhooks.h"
 #include "CriticalSections.h"
-
+InterfaceManager* InterfaceManager::GetSingleton()
+{
+	return *(InterfaceManager * *)0x11D8A80;
+}
 
 enum StartMenuFlags
 {
@@ -156,18 +160,40 @@ void TimeGlobalHook() {
 
 }
 
+void TimeGlobalHookAutomatic() {
+
+	double Delta = GetFPSCounterMiliSeconds();
+	if (InterfaceManager::GetSingleton()->currentMode != 1)
+	{
+		*g_FPSGlobal = 0;
+		*fMaxTime = DefaultMaxTime;
+	}
+	else
+	{
+		*g_FPSGlobal = Delta;
+		if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
+		{
+			*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.982);
+		}
+		if (g_bfMaxTime)* fMaxTime = Delta / 1000;
+	}
+
+}
 
 
 
 
 
-
+static uintptr_t FPSFix_TimeHookCall = NULL;
 void __declspec(naked) FPSHookHandler()
 {
 
 	__asm {
 		push ecx
-		call TimeGlobalHook
+		test FPSFix_TimeHookCall, 0
+		jz skip
+		call FPSFix_TimeHookCall
+		skip:
 		pop ecx
 		jmp OriginalFunction
 	}
@@ -176,7 +202,9 @@ void __declspec(naked) FPSHookHandler()
 void HookFPSStuff()
 {
 	SafeWriteBuf(0x86E65A, "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90", 0x11);
-	WriteRelCall((UINT32)0x86E65A, (UInt32)& FPSHookHandler);
+
+	WriteRelCall((uintptr_t)0x86E65A, (uintptr_t)& FPSHookHandler);
+	FPSFix_TimeHookCall = (uintptr_t)((g_bAutomaticFPSFix > 0) ? &TimeGlobalHookAutomatic : &TimeGlobalHook);
 	OriginalFunction = 0x86E66C;
 }
 
@@ -185,18 +213,7 @@ void DoPatches()
 {
 	//int g_bAllowDebugging = 1;
 	//if (g_bAllowDebugging)	SafeWriteBuf(0x4DAD61, "\x90\x90\x90\x90\x90\x90\x90", 7);
-	if (g_bSpinCriticalSections) {
-		_MESSAGE("CS ENABLED");
-		WriteRelJump(0x0A62B08, (UInt32)NiObjectCriticalSections);
-		WriteRelJump(0x0AA8D5B, (UInt32)MemHeapCSHook);
-		DoHeapCriticalSectionSpin();
-		if ((signed int)g_iSpinCount > -1) {
-			SafeWrite32(0x0FDF054, (UInt32)InitCriticalSectionHook);
-		}
 
-
-
-	}
 	if (g_bEnableExperimentalHooks) {
 		if (g_bRemoveRCSafeGuard)	RemoveRefCountSafeGuard();
 		if (g_bRemoveRendererLockSafeGuard) RemoveRendererLockSafeGuard();
