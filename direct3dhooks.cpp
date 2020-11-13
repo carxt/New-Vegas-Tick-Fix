@@ -73,14 +73,26 @@ namespace D3DHooks {
 		//printf("get fucked");
 		return 0;
 	}
+	D3DDISPLAYMODEEX currentDisplayMod;
+	bool currentDisplayModExists = false;
+	HRESULT D3DAPI hk_D3D9_Reset(LPDIRECT3DDEVICE9EX This,D3DPRESENT_PARAMETERS* pPresentationParameters)
+	{
+		ASSERT_STR(This, "D3D9 Reset ERROR");
+		if (currentDisplayModExists) return This->ResetEx(pPresentationParameters,&currentDisplayMod);
+		return This->ResetEx(pPresentationParameters, NULL);
 
+	}
 	HRESULT D3DAPI hk_CreateDeviceEx(IDirect3D9Ex* This, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* displayMod, IDirect3DDevice9Ex** ppReturnedDeviceInterface)
 	{
 		HRESULT hr;
 		//pPresentationParameters->SwapEffect = D3DSWAPEFFECT_DISCARD;
 		//BehaviorFlags &= ~D3DCREATE_MULTITHREADED;
 		//BehaviorFlags &= ~D3DCREATE_MULTITHREADED;
-
+		if (displayMod)
+		{
+			currentDisplayMod = *displayMod;
+			currentDisplayModExists = true;
+		}
 		if (g_bToggleTripleBuffering) pPresentationParameters->BackBufferCount = (UINT)g_iNumBackBuffers;
 		if (pPresentationParameters->Windowed) foreWindow = hFocusWindow ? hFocusWindow : pPresentationParameters->hDeviceWindow;
 		//BehaviorFlags |= D3DCREATE_NOWINDOWCHANGES;
@@ -100,7 +112,11 @@ namespace D3DHooks {
 			if (g_bD3D9ManageResources) BehaviorFlags |= D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX;
 			hr = This->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, displayMod, (IDirect3DDevice9Ex * *)ppReturnedDeviceInterface);
 			_MESSAGE("Using CreateDeviceEx for device creation\n");
+			auto AddressToPatch = (**(uintptr_t**)ppReturnedDeviceInterface) + 0x16 * 4;
+			SafeWrite32(AddressToPatch, (uintptr_t)hk_D3D9_Reset);
+
 		}
+
 		//_MESSAGE("present vtable: 0x%X", **(UINT32 * *)ppReturnedDeviceInterface);
 		return hr;
 	}
@@ -205,15 +221,18 @@ namespace D3DHooks {
 			jmp hk_IndexBufferLock
 		}
 	}
-
+	//replace our managed pool for DirectX9 DEFAULT pool, this is bound to cause a significant memory reduction
+	HRESULT __stdcall CreateCubeTextureFromFileInMemoryHookForD3D9(LPDIRECT3DDEVICE9 pDevice, LPCVOID pSrcData, UINT SrcDataSize, LPDIRECT3DCUBETEXTURE9* ppCubeTexture)
+	{
+		return D3DXCreateCubeTextureFromFileInMemoryEx(pDevice, pSrcData, SrcDataSize, D3DX_DEFAULT, D3DX_DEFAULT, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, NULL, NULL, ppCubeTexture);
+	}
 	HRESULT __stdcall CreateTextureFromFileInMemoryHookForD3D9(LPDIRECT3DDEVICE9 pDevice, LPCVOID pSrcData, UINT SrcDataSize, LPDIRECT3DTEXTURE9* ppTexture) {
 
 		return D3DXCreateTextureFromFileInMemoryEx(pDevice, pSrcData, SrcDataSize, D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, NULL, NULL, ppTexture);
 	}
-
-	HRESULT __stdcall CreateTextureFromFileInMemoryHookForD3D9Ex(LPDIRECT3DDEVICE9 pDevice, LPCVOID pSrcData, UINT SrcDataSize, LPDIRECT3DTEXTURE9* ppTexture) {
-
-		return D3DXCreateTextureFromFileInMemoryEx(pDevice, pSrcData, SrcDataSize, D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, D3DUSAGE_DYNAMIC, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, NULL, NULL, ppTexture);
+	HRESULT __stdcall CreateVolumeTextureFromFileInMemoryHookForD3D9(LPDIRECT3DDEVICE9 pDevice, LPCVOID pSrcFile, UINT SrcData, LPDIRECT3DVOLUMETEXTURE9* ppVolumeTexture)
+	{
+		return D3DXCreateVolumeTextureFromFileInMemoryEx(pDevice, pSrcFile, SrcData, D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, NULL, NULL, ppVolumeTexture);
 	}
 
 	bool SetGammaRampInit = false;
@@ -271,12 +290,15 @@ namespace D3DHooks {
 				return;
 			}
 
-			//WriteRelCall(0x00E68DCD, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9Ex));
 		}
 		else
 		{
 
-			WriteRelCall(0x00E68DCD, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9));
+			SafeWrite32(0xFDF3FC, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9));
+			SafeWrite32(0xFDF400, (UInt32)(CreateCubeTextureFromFileInMemoryHookForD3D9));
+			SafeWrite32(0xFDF404, (UInt32)(CreateVolumeTextureFromFileInMemoryHookForD3D9));
+
+
 		}
 	}
 }

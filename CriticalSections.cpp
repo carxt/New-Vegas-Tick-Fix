@@ -3,87 +3,6 @@
 #include "nvse/SafeWrite.h"
 ULONG g_iSpinCount;
 
-//this shit is for XP, but that's old af already
-/*
-__declspec (naked)  DWORD NiObjectCriticalSections(DWORD* ecx)
-{
-
-	static const DWORD returnAddress = 0x0A62B29;
-	__asm
-	{
-		mov [esi+8], ebx
-		mov [esi+0x14], ebx
-		lea eax, [esi+0x80]
-		push 1000
-		push eax
-		call InitializeCriticalSectionAndSpinCount
-		lea ecx, [esi + 0x100]
-		push 1000
-		push ecx
-		call InitializeCriticalSectionAndSpinCount
-		lea edx, [esi + 0x180]
-		push 1000
-		push edx
-		call InitializeCriticalSectionAndSpinCount
-		jmp returnAddress
-	}
-}
-
-
-__declspec (naked)  DWORD someOddCSCall(DWORD* ecx)
-{
-
-	static const DWORD returnAddress = 0x0FB334E;
-	__asm
-	{
-		push 6000
-		push 0x11F3330
-		call InitializeCriticalSectionAndSpinCount
-		jmp returnAddress
-	}
-}
-
-
-__declspec (naked)  DWORD someOddCSCall_2(DWORD* ecx)
-{
-
-	static const DWORD returnAddress = 0xA5B577;
-	__asm
-	{
-		push 2000
-		push eax
-		call InitializeCriticalSectionAndSpinCount
-		jmp returnAddress
-	}
-}
-
-
-
-void __stdcall InitCriticalSectionHook(LPCRITICAL_SECTION section)
-{
-
-	InitializeCriticalSectionAndSpinCount(section, g_iSpinCount);
-}
-
-
-void __declspec (naked) MemHeapCSHook(DWORD* MemHeap)
-{
-	static const UInt32 RetAddr = 0x0AA8D62;
-	__asm{
-		push 4000
-		push edx
-		call InitializeCriticalSectionAndSpinCount
-		jmp RetAddr
-	}
-
-
-}
-
-
-
-
-*/
-
 
 __declspec (naked) void ReturnCSHook()
 {
@@ -271,12 +190,129 @@ void RemoveRefCountSafeGuard()
 
 }
 
-void Remove0x80SafeGuard()
+/*
+__declspec(naked) void hk_call_E74247()
+{
+	__asm
+	{
+		push ecx
+		mov eax, dword ptr ss : [esp + 8]
+		push ebx
+		mov ebx, dword ptr ss : [esp + 18]
+		push esi
+		push edi
+		mov edi, dword ptr ss : [esp + 1C]
+		push ebx
+		lea edx, dword ptr ss : [esp + 10]
+		push edx
+		mov edx, dword ptr ss : [esp + 20]
+		push edi
+		mov esi, ecx
+		mov ecx, dword ptr ds : [eax]
+		push edx
+		push eax
+		mov eax, dword ptr ds : [ecx + 2C]
+		mov dword ptr ss : [esp + 20] , 0
+		call eax
+		test eax, eax
+		jge 0xE8C038
+		pop edi
+		pop esi
+		xor eax, eax
+		pop ebx
+		pop ecx
+		ret 10
+	}
+
+}
+__declspec(naked) void hk_call_E74247()
+{
+	__asm
+	{
+		push ecx
+		mov eax, dword ptr ss : [esp + 8]
+		push ebx
+		mov ebx, dword ptr ss : [esp + 18]
+		push esi
+		push edi
+		mov edi, dword ptr ss : [esp + 1C]
+		push ebx
+		lea edx, dword ptr ss : [esp + 10]
+		push edx
+		mov edx, dword ptr ss : [esp + 20]
+		push edi
+		mov esi, ecx
+		mov ecx, dword ptr ds : [eax]
+		push edx
+		push eax
+		mov eax, dword ptr ds : [ecx + 2C]
+		mov dword ptr ss : [esp + 20] , 0
+		call eax
+		test eax, eax
+		jge 0xE8C038
+		pop edi
+		pop esi
+		xor eax, eax
+		pop ebx
+		pop ecx
+		ret 10
+	}
+
+}*/
+
+void RemoveRendererLockSafeGuard()
 {
 	//takes out lock called by both Renderer+0x80 AND Renderer+0x100
-	SafeWrite16(0xE73FF3, 0x9058);
-	SafeWrite16(0xE74000, 0x9058);
-	SafeWriteBuf(0xE74106, "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90", 10);
+	SafeWrite16(0xE7413E, 0x905F);
+	SafeWrite16(0xE7414B, 0x9058);
+	//exit
+	SafeWrite16(0xE744A0, 0x905A);
+	SafeWrite16(0xE744A3, 0x905F);
 
 
+
+}
+
+
+
+
+void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
+{
+	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
+	if (spinCount > 2000) return EnterCriticalSection(cs);
+	spinCount = 1000;
+	unsigned int i = 0;
+	while (i <= spinCount)
+	{
+		if (TryEnterCriticalSection(cs)) return;
+		Sleep(0);
+		i++;
+	}
+	i = 0;
+	while (i <= spinCount)
+	{
+		if (TryEnterCriticalSection(cs)) return;
+		Sleep(1);
+		i++;
+	}
+	return EnterCriticalSection(cs);
+}
+
+BOOL WINAPI hk_InitializeCriticalSectionhook(LPCRITICAL_SECTION cs)
+{
+	return InitializeCriticalSectionEx(cs, 3000, RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO);
+	cs->SpinCount &= ~(RTL_CRITICAL_SECTION_ALL_FLAG_BITS) | RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO;
+
+}
+
+
+
+
+
+void TweakMiscCriticalSections()
+{
+	SafeWrite8(0x04538EB, 0x90);
+	WriteRelCall(0x04538EC, (uintptr_t)hk_EnterCriticalSection);
+	SafeWrite8(0xA5B571, 0x90);
+	WriteRelCall(0xA5B572, (uintptr_t)hk_InitializeCriticalSectionhook);
 }

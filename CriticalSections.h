@@ -56,4 +56,5 @@ void ReturnCSHook();
 
 void DoHeapCriticalSectionSpin();
 void RemoveRefCountSafeGuard();
-void Remove0x80SafeGuard();
+void RemoveRendererLockSafeGuard();
+void TweakMiscCriticalSections();

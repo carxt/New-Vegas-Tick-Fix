@@ -21,7 +21,8 @@ int g_bSpinCriticalSections = 1;
 int g_bfMaxTime;
 int g_bEnableExperimentalHooks = 0;
 int g_bRemoveRCSafeGuard = 0;
-int g_bRemove0x80SafeGuard = 0;
+int g_bRemoveRendererLockSafeGuard = 0;
+int g_bTweakMiscCriticalSections = 0;
 int g_bSpiderHandsFix = 0;
 float g_iDialogFixMult = 1;
 double	DesiredMax = 1;
@@ -198,7 +199,8 @@ void DoPatches()
 	}
 	if (g_bEnableExperimentalHooks) {
 		if (g_bRemoveRCSafeGuard)	RemoveRefCountSafeGuard();
-		if (g_bRemove0x80SafeGuard) Remove0x80SafeGuard();
+		if (g_bRemoveRendererLockSafeGuard) RemoveRendererLockSafeGuard();
+		if (g_bTweakMiscCriticalSections) TweakMiscCriticalSections();
 		SafeWriteBuf(0x8728D7, "\x8B\xE5\x5D\xC3\x90\x90", 6);
 
 	}

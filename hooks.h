@@ -1138,11 +1138,6 @@ void HookInlines()
 		// some havok
 		SafeWriteBuf(0x4A3E00, (char*)Sub_4A3E00_Hook, 0x2B);
 
-		// optimise an audio function's loop
-		SafeWrite32(0xAEBE01, 0x1BEBE87D);
-		SafeWriteBuf(0xAEBE20, "\x3B\x7D\xCC\x73\x62\x8B\x75\x94\x3B\x75", 10);
-		SafeWriteBuf(0xAEBE6E, "\x8A\x0E\x88\x0C\x3A\xFF\x45\x94\x47\xEB\xA7", 11);
-
 		// remove useless push args call pop args for calls to __cdecl function by just jumping to it
 		WriteRelJump(0x4EDE70, 0xAA10F0);
 
