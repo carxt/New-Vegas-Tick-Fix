@@ -1,11 +1,10 @@
-  
+#include <string>
 #include "nvse/PluginAPI.h"
 #include "nvse/CommandTable.h"
 #include "nvse/GameAPI.h"
 #include "nvse/ParamInfos.h"
 #include "nvse/GameObjects.h"
 #include "main.h"
-#include <string>
 
 IDebugLog gLog("NVTF.log");
 HANDLE MyHandle;
@@ -28,8 +27,9 @@ extern "C" {
 
 	bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 	{
+		std::string fuckyou;
 		info->name = "NVTF";
-		info->version = 8;
+		info->version = 9;
 		info->infoVersion = PluginInfo::kInfoVersion;
 
 		// version checks

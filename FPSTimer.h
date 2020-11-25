@@ -1,5 +1,5 @@
 #pragma once
-
+#include <chrono>
 extern int g_bAlternateGTCFix;
 
 void FPSStartCounter();

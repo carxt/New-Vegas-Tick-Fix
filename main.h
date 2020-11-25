@@ -38,16 +38,20 @@ int g_bLightInlines = 0;
 int g_bHeavyInlines = 0;
 int g_bAutomaticFPSFix = 0;
 
-
 #include "hooks.h"
 #include "FPSTimer.h"
 #include "GameUI.h"
 #include "direct3dhooks.h"
 #include "CriticalSections.h"
+#include <intrin.h>
+
 InterfaceManager* InterfaceManager::GetSingleton()
 {
 	return *(InterfaceManager * *)0x11D8A80;
 }
+
+std::map<uintptr_t, int> MapLogger;
+
 
 enum StartMenuFlags
 {
@@ -80,6 +84,10 @@ void ResetBrightness()
 void FastExit()
 {
 	ResetBrightness();
+	/*for (auto it = MapLogger.begin(); it != MapLogger.end(); ++it) 
+	{
+		_MESSAGE("Address 0x%X called %i times", it->first, it->second);
+	}*/
 	if (UInt32 start = (UInt32) GetStartMenuSingleton())
 	{
 		if (*(UInt32*)(start  + 0x1A8) & StartMenuFlags::kHasChangedSettings)
@@ -163,7 +171,7 @@ void TimeGlobalHook() {
 void TimeGlobalHookAutomatic() {
 
 	double Delta = GetFPSCounterMiliSeconds();
-	if (InterfaceManager::GetSingleton()->currentMode != 1)
+	if ((InterfaceManager::GetSingleton()->currentMode != 1 || *g_IsMenuMode) && !(((bool(__cdecl*)(int))(0x7027B0))(1009) || *g_DialogMenu2 || *g_DialogMenu))
 	{
 		*g_FPSGlobal = 0;
 		*fMaxTime = DefaultMaxTime;
@@ -181,6 +189,24 @@ void TimeGlobalHookAutomatic() {
 }
 
 
+DWORD hk_GetTickCount()
+{
+
+	if (InterfaceManager::GetSingleton()->currentMode != 2)
+	{
+		auto retAddr = (uintptr_t)_ReturnAddress();
+		auto it = MapLogger.find(retAddr);
+		if (it != MapLogger.end())
+		{
+			it->second += 1;
+		}
+		else
+		{
+			MapLogger.insert(std::pair<uintptr_t, int>(retAddr, 1));
+		}
+	}
+	return GetTickCount();
+}
 
 
 
@@ -190,7 +216,7 @@ void __declspec(naked) FPSHookHandler()
 
 	__asm {
 		push ecx
-		test FPSFix_TimeHookCall, 0
+		cmp FPSFix_TimeHookCall, 0
 		jz skip
 		call FPSFix_TimeHookCall
 		skip:
@@ -247,10 +273,22 @@ void DoPatches()
 		//timeBeginPeriod(1);
 		//SafeWrite32(0xFDF060, (UInt32)timeGetTime);
 		FPSStartCounter();
-		if (!g_bAlternateGTCFix) SafeWrite32(0xFDF060, (UInt32)ReturnCounter);
-		else {
-			timeBeginPeriod(1);  SafeWrite32(0xFDF060, (UInt32)timeGetTime);
+		uintptr_t TargetGTC = (uintptr_t)ReturnCounter;
+		if (g_bAlternateGTCFix) {
+			timeBeginPeriod(1);  
+			SafeWrite32(0xFDF060, (UInt32)timeGetTime);
 		}
+		else {
+			SafeWrite32(0xFDF060, TargetGTC);
+
+			//first two are render, rest are audio
+		/*	for (uintptr_t Destination : {0xC45995, 0xC45902, 0xADF0F9, 0xAE7619, 0xADDE34, 0xADEA26, 0xAE7777, 0x0AEA109})
+			{
+				SafeWrite8(Destination, 0x90);
+				WriteRelCall(Destination + 1, TargetGTC);
+			}*/
+		}
+		//SafeWrite32(0xFDF060, (UInt32)hk_GetTickCount);
 		if (g_bFPSFix)
 		{
 			_MESSAGE("FPSFIX ENABLED");

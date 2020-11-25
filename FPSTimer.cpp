@@ -2,40 +2,32 @@
 
 #include "FPSTimer.h"
 double FPSTimerFrequency = 0;
-ULONGLONG CurrentStat = 0;
+double lastCount = 0;
+
+signed int GetTickCountBias = 0;
+
 void FPSStartCounter()
 {
-	LARGE_INTEGER li;
-	if (!QueryPerformanceFrequency(&li)) _MESSAGE("UNEXPECTED ERROR");
-	FPSTimerFrequency = double(li.QuadPart) / 1000.0;
-	QueryPerformanceCounter(&li);
-	CurrentStat = li.QuadPart;
-
+	auto Now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch()));
+	long duration = Now.count();
+	GetTickCountBias = duration - GetTickCount();
+	lastCount = duration;
 }
 
 double GetFPSCounterMiliSeconds()
 {
-	if (!g_bAlternateGTCFix) 
-	{
-		LARGE_INTEGER li;
-		QueryPerformanceCounter(&li);
-		double toReturn = (double(li.QuadPart - CurrentStat)) / FPSTimerFrequency;
-		CurrentStat = li.QuadPart;
-		return toReturn;
-	}
-	ULONGLONG tGtCurrent = timeGetTime();
-	double toReturn = double(tGtCurrent - CurrentStat);
-	CurrentStat = tGtCurrent;
+
+	auto Now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()).time_since_epoch()));
+	double currentCount = double(Now.count()) / 1000000;
+	double toReturn = currentCount - lastCount;
+	lastCount = currentCount;
 	return toReturn;
+
 }
 
 
 DWORD ReturnCounter()
 {
-	LARGE_INTEGER tgtInteger;
-	QueryPerformanceCounter(&tgtInteger);
-	return DWORD((tgtInteger.QuadPart / FPSTimerFrequency));
-
+	auto Now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch()));
+	return unsigned long (Now.count() - GetTickCountBias);
 }
-
-
