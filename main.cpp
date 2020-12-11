@@ -27,7 +27,6 @@ extern "C" {
 
 	bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* info)
 	{
-		std::string fuckyou;
 		info->name = "NVTF";
 		info->version = 9;
 		info->infoVersion = PluginInfo::kInfoVersion;
