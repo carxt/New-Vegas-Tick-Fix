@@ -10,6 +10,23 @@ IDebugLog gLog("NVTF.log");
 HANDLE MyHandle;
 
 
+__declspec (naked) uint8_t __cdecl snig(const std::vector<uint8_t>& v)
+{
+	__asm
+	{
+		sub esp, 4
+		lea eax, [esp]
+		push 4
+		mov eax, dword ptr ds : [v]
+		push 4
+		push eax
+		call memcpy_s
+		add esp, 0xC
+		pop eax
+		ret
+	}
+}
+
 extern "C" {
 	BOOL WINAPI DllMain(
 		HANDLE  hDllHandle,
@@ -86,7 +103,7 @@ extern "C" {
 		char floatbuffer[0x40];
 		g_iSpinCount = 0;// GetPrivateProfileInt("CS", "iSpinCount", -1, iniDir);
 		g_bFPSFix = GetPrivateProfileInt("GTC", "bFPSFix", 0, iniDir);
-		g_bAutomaticFPSFix = GetPrivateProfileInt("FPSFix", "bAutomaticFPSFix", 0, iniDir);
+		g_bAutomaticFPSFix = 0;
 
 		g_iMaxFPS = GetPrivateProfileInt("FPSFix", "iMaxFPSTolerance", 59, iniDir);
 		g_iMinFPS = GetPrivateProfileInt("FPSFix", "iMinFPSTolerance", 20, iniDir);
@@ -96,8 +113,9 @@ extern "C" {
 		g_bReplaceHashingAlgorithm = 0;// GetPrivateProfileInt("Hashtables", "bReplaceHashingAlgorithm", 0, iniDir);
 		g_iDialogFixMult = atof(floatbuffer);
 		// bRemoveRCSafeGuard and bRemove0x80SafeGuard are left as legacy names
-		g_bRemoveRCSafeGuard = GetPrivateProfileInt("Experimental", "bRemoveRCSafeGuard", 0, iniDir); 
-		g_bRemoveRendererLockSafeGuard = GetPrivateProfileInt("Experimental", "bRemove0x80SafeGuard", 0, iniDir);
+		g_bRemoveRCSafeGuard = GetPrivateProfileInt("Experimental", "bRemoveRCSafeGuard", 0, iniDir);
+		g_bRemoveRendererLockSafeGuard = 0;
+		//g_bRemoveRendererLockSafeGuard = GetPrivateProfileInt("Experimental", "bRemove0x80SafeGuard", 0, iniDir);
 		g_bTweakMiscCriticalSections= GetPrivateProfileInt("Experimental", "bTweakMiscCriticalSections", 0, iniDir);
 		g_bSpiderHandsFix = GetPrivateProfileInt("Experimental", "bSpiderHandsFix", 0, iniDir);
 		g_bToggleTripleBuffering = GetPrivateProfileInt("DirectX", "bToggleTripleBuffering", 0, iniDir);

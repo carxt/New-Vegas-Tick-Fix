@@ -137,7 +137,7 @@ inline UInt32 Calculaterel32(UInt32 Destination, UInt32 source)
 
 
 
-void TimeGlobalHook() {
+void __stdcall TimeGlobalHook(void* unused) {
 
 	double Delta = GetFPSCounterMiliSeconds(); 
 	if (*g_IsMenuMode)
@@ -168,25 +168,12 @@ void TimeGlobalHook() {
 
 }
 
-void TimeGlobalHookAutomatic() {
 
-	double Delta = GetFPSCounterMiliSeconds();
-	if ((InterfaceManager::GetSingleton()->currentMode != 1 || *g_IsMenuMode) && !(((bool(__cdecl*)(int))(0x7027B0))(1009) || *g_DialogMenu2 || *g_DialogMenu))
-	{
-		*g_FPSGlobal = 0;
-		*fMaxTime = DefaultMaxTime;
-	}
-	else
-	{
-		*g_FPSGlobal = Delta;
-		if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
-		{
-			*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.982);
-		}
-		if (g_bfMaxTime)* fMaxTime = Delta / 1000;
-	}
 
-}
+
+
+
+
 
 
 DWORD hk_GetTickCount()
@@ -211,27 +198,11 @@ DWORD hk_GetTickCount()
 
 
 static uintptr_t FPSFix_TimeHookCall = NULL;
-void __declspec(naked) FPSHookHandler()
-{
-
-	__asm {
-		push ecx
-		cmp FPSFix_TimeHookCall, 0
-		jz skip
-		call FPSFix_TimeHookCall
-		skip:
-		pop ecx
-		jmp OriginalFunction
-	}
-
-}
 void HookFPSStuff()
 {
-	SafeWriteBuf(0x86E65A, "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90", 0x11);
-
-	WriteRelCall((uintptr_t)0x86E65A, (uintptr_t)& FPSHookHandler);
-	FPSFix_TimeHookCall = (uintptr_t)((g_bAutomaticFPSFix > 0) ? &TimeGlobalHookAutomatic : &TimeGlobalHook);
-	OriginalFunction = 0x86E66C;
+	//SafeWriteBuf(0x86E65A, "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90", 0x11);
+	FPSFix_TimeHookCall = (uintptr_t)(&TimeGlobalHook);
+		if (FPSFix_TimeHookCall) WriteRelCall((uintptr_t)0x086E667, FPSFix_TimeHookCall);
 }
 
 

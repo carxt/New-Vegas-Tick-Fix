@@ -279,9 +279,14 @@ void RemoveRendererLockSafeGuard()
 void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
 {
 	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
-	if (spinCount > 2000) return EnterCriticalSection(cs);
-	spinCount = 1000;
+	if (spinCount > 100) return EnterCriticalSection(cs);
+	spinCount = 800;
 	unsigned int i = 0;
+	while (i <= 50)
+	{
+		if (TryEnterCriticalSection(cs)) return;
+		i++;
+	}
 	while (i <= spinCount)
 	{
 		if (TryEnterCriticalSection(cs)) return;
@@ -300,7 +305,7 @@ void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
 
 BOOL WINAPI hk_InitializeCriticalSectionhook(LPCRITICAL_SECTION cs)
 {
-	return InitializeCriticalSectionEx(cs, 3000, RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO);
+	return InitializeCriticalSectionEx(cs, 4000, RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO);
 	cs->SpinCount &= ~(RTL_CRITICAL_SECTION_ALL_FLAG_BITS) | RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO;
 
 }

@@ -10,7 +10,7 @@ void FPSStartCounter()
 {
 	auto Now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch()));
 	long duration = Now.count();
-	GetTickCountBias = duration - GetTickCount();
+	GetTickCountBias = duration - long(GetTickCount());
 	lastCount = duration;
 }
 
