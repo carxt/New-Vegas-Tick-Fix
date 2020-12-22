@@ -10,22 +10,6 @@ IDebugLog gLog("NVTF.log");
 HANDLE MyHandle;
 
 
-__declspec (naked) uint8_t __cdecl snig(const std::vector<uint8_t>& v)
-{
-	__asm
-	{
-		sub esp, 4
-		lea eax, [esp]
-		push 4
-		mov eax, dword ptr ds : [v]
-		push 4
-		push eax
-		call memcpy_s
-		add esp, 0xC
-		pop eax
-		ret
-	}
-}
 
 extern "C" {
 	BOOL WINAPI DllMain(
