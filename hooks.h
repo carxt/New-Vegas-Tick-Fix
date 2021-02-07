@@ -1286,23 +1286,25 @@ void DoHashTableStuff()
 		SafeWrite32(0x00B7FF85, 247);
 		SafeWrite32(0x00B9A5EB, 628);
 		SafeWrite32(0x00B9A5FD, 157);
-
-		if (g_TileMap->m_numItems == 0)
+		if (false)
 		{
-			delete g_TileMap;
-			ThisStdCall(0xA0D8E0, g_TileMap, 8701);
-			*(UInt32*)g_TileMap = 0x1094E7C;
-		}
+			if (g_TileMap->m_numItems == 0)
+			{
+				delete g_TileMap;
+				ThisStdCall(0xA0D8E0, g_TileMap, 8701);
+				*(UInt32*)g_TileMap = 0x1094E7C;
+			}
 
-		if (g_EarlyMap1->m_numItems == 0)
-		{
-			delete g_EarlyMap1;
-			ThisStdCall(0xA0D710, g_EarlyMap1, (4*371) );
-			*(UInt32*)g_EarlyMap1 = 0x1094E3C;
+			if (g_EarlyMap1->m_numItems == 0)
+			{
+				delete g_EarlyMap1;
+				ThisStdCall(0xA0D710, g_EarlyMap1, (4 * 371));
+				*(UInt32*)g_EarlyMap1 = 0x1094E3C;
+			}
 		}
 	}
 
-	if (g_bReplaceHashingAlgorithm) 
+	if (false && g_bReplaceHashingAlgorithm) 
 	{
 
 		for (UInt32 patchAddr : {0x049C4C0, /*0x6C6A60,*/ 0x0A0D260, 0x0863C70, 0x0A63840, 0x069B620}) //numeric hashes

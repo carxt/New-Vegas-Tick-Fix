@@ -1,12 +1,8 @@
 #pragma once
-#include <d3d9.h>
-#include <d3dx9.h>
 #include "direct3dhooks.h"
 #include "nvse/SafeWrite.h"
 
-#pragma comment (lib, "d3d9.lib")
-#pragma comment (lib, "d3dx9.lib")
-#pragma comment (lib, "Gdiplus.lib")
+
 HWND foreWindow = NULL;
 int g_bToggleTripleBuffering;
 int g_bUseFlipExSwapMode;
@@ -150,8 +146,8 @@ namespace D3DHooks {
 		//Pool = IsD3D9ExAvailable() == 0 ? Pool : D3DPOOL_DEFAULT;
 		Usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
 		Usage |= D3DUSAGE_DYNAMIC;
-		Usage |= D3DUSAGE_WRITEONLY;
-
+		//Usage |= D3DUSAGE_WRITEONLY;
+		Pool = D3DPOOL_DEFAULT;
 		HRESULT hr = pDevice->CreateVertexBuffer(Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
 		//(*ppVertexBuffer)->Lock(1, 1, NULL, 1);
 		return hr;
@@ -160,25 +156,26 @@ namespace D3DHooks {
 	{
 		Usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
 		Usage |= D3DUSAGE_DYNAMIC;
-		Usage |= D3DUSAGE_WRITEONLY;
+		//Usage |= D3DUSAGE_WRITEONLY;
+		Pool = D3DPOOL_DEFAULT;
 		HRESULT hr = pDevice->CreateIndexBuffer(Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
 		//_MESSAGE("vtable here: %X", *(UINT*)ppIndexBuffer);
 		return hr;
 	}
 	HRESULT __stdcall hk_VertexBufferLock(IDirect3DVertexBuffer9* ppVertexBuffer, UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 	{
-		Flags |= D3DLOCK_NOOVERWRITE;
+		/*Flags |= D3DLOCK_NOOVERWRITE;
 		Flags |= D3DLOCK_DISCARD;
-		Flags |= D3DLOCK_NOSYSLOCK;
+		Flags |= D3DLOCK_NOSYSLOCK;*/
 		HRESULT hr = ppVertexBuffer->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
 		return hr;
 	}
 	HRESULT __stdcall hk_IndexBufferLock(IDirect3DIndexBuffer9* ppIndexBuffer, UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 	{
 		//_MESSAGE("flegs: 0%X", Flags);
-		Flags |= D3DLOCK_NOOVERWRITE;
+		/*Flags |= D3DLOCK_NOOVERWRITE;
 		Flags |= D3DLOCK_DISCARD;
-		Flags |= D3DLOCK_NOSYSLOCK;
+		Flags |= D3DLOCK_NOSYSLOCK;*/
 		HRESULT hr = ppIndexBuffer->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
 		return hr;
 	}
@@ -253,7 +250,7 @@ namespace D3DHooks {
 	}
 
 
-	void UseD3D9xPatchMemory(int ForceD3D9Ex, int ToggleDynamicResources)
+	void UseD3D9xPatchMemory(int ForceVertexDefaultPool, int ToggleDynamicResources)
 	{
 		g_iNumBackBuffers = g_iNumBackBuffers > 4 ? 4 : (g_iNumBackBuffers < 1 ? 1 : g_iNumBackBuffers);
 
@@ -264,7 +261,7 @@ namespace D3DHooks {
 		WriteRelCall(0xE76215, (uintptr_t)(hk_Direct3DCreate9));
 
 
-		if (ForceD3D9Ex)
+		if (ForceVertexDefaultPool)
 		{
 
 			SafeWrite16(0xE94E87, 0xB890);
@@ -291,14 +288,13 @@ namespace D3DHooks {
 			}
 
 		}
-		else
-		{
-
-			SafeWrite32(0xFDF3FC, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9));
-			SafeWrite32(0xFDF400, (UInt32)(CreateCubeTextureFromFileInMemoryHookForD3D9));
-			SafeWrite32(0xFDF404, (UInt32)(CreateVolumeTextureFromFileInMemoryHookForD3D9));
 
 
-		}
+	SafeWrite32(0xFDF3FC, (UInt32)(CreateTextureFromFileInMemoryHookForD3D9));
+	SafeWrite32(0xFDF400, (UInt32)(CreateCubeTextureFromFileInMemoryHookForD3D9));
+	SafeWrite32(0xFDF404, (UInt32)(CreateVolumeTextureFromFileInMemoryHookForD3D9));
+
+
+		
 	}
 }

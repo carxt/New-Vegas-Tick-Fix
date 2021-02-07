@@ -37,7 +37,7 @@ int g_bAlternateGTCFix = 0;
 int g_bLightInlines = 0;
 int g_bHeavyInlines = 0;
 int g_bAutomaticFPSFix = 0;
-
+int g_bUseDefaultPoolForBuffers = 0;
 #include "hooks.h"
 #include "FPSTimer.h"
 #include "GameUI.h"
@@ -136,9 +136,8 @@ inline UInt32 Calculaterel32(UInt32 Destination, UInt32 source)
  bool* g_DialogMenu2 = (bool*)0x11DEA2B;
 
 
-
+ /*
 void __stdcall TimeGlobalHook(void* unused) {
-
 	double Delta = GetFPSCounterMiliSeconds(); 
 	if (*g_IsMenuMode)
 	{
@@ -167,7 +166,39 @@ void __stdcall TimeGlobalHook(void* unused) {
 	}
 
 }
+*/
 
+void __stdcall TimeGlobalHook(void* unused) {
+
+	double Delta = GetFPSCounterMiliSeconds();
+	if (g_bfMaxTime)* fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime && Delta > DesiredMax) ? Delta / 1000 : DefaultMaxTime / 1000);
+
+	if (*g_IsMenuMode)
+	{
+
+		if (*g_DialogMenu2 || *g_DialogMenu)
+		{
+			*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax / g_iDialogFixMult) ? Delta : DesiredMax / g_iDialogFixMult) : DesiredMin) : 0;
+
+		}
+		else
+		{
+			*g_FPSGlobal = 0;
+		}
+	}
+	else
+	{
+		*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
+	}
+
+	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
+	{
+		//__asm {int 3}
+		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.987);
+		if (g_bfMaxTime)* fMaxTime = *g_FPSGlobal / 1000;
+	}
+
+}
 
 
 
@@ -271,7 +302,7 @@ void DoPatches()
 		}
 	}
 	if (g_bModifyDirectXBehavior)
-		D3DHooks::UseD3D9xPatchMemory(g_bForceD3D9Ex, g_bUseDynamicResources);
+		D3DHooks::UseD3D9xPatchMemory(g_bForceD3D9Ex || g_bUseDefaultPoolForBuffers, g_bUseDynamicResources);
 }
 
 

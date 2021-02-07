@@ -10,7 +10,6 @@ IDebugLog gLog("NVTF.log");
 HANDLE MyHandle;
 
 
-
 extern "C" {
 	BOOL WINAPI DllMain(
 		HANDLE  hDllHandle,
@@ -69,7 +68,7 @@ extern "C" {
 	{
 
 		_MESSAGE("Base Address %lx", (UInt32)MyHandle);
-		_MESSAGE("NVTF Version: %u", 8);
+		_MESSAGE("NVTF Version: %u", 9);
 		char iniDir[MAX_PATH];
 		
 		GetModuleFileNameA(GetModuleHandle(NULL), iniDir, MAX_PATH);
@@ -78,7 +77,7 @@ extern "C" {
 		g_bGTCFix = GetPrivateProfileInt("Main", "bGTCFix", 0, iniDir);
 		g_bAllowBrightnessChangeWindowed = GetPrivateProfileInt("Main", "bAllowBrightnessChangeWindowed", 0, iniDir);
 		g_bFastExit = GetPrivateProfileInt("Main", "bFastExit", 1, iniDir);
-		g_bInlineStuff = GetPrivateProfileInt("Main", "bInlineCommonFunctions", 0, iniDir);
+		g_bInlineStuff = 0;// GetPrivateProfileInt("Main", "bInlineCommonFunctions", 0, iniDir);
 		g_bSpinCriticalSections = 0; // GetPrivateProfileInt("Main", "bSpinCriticalSections", 0, iniDir);
 		g_bEnableExperimentalHooks = GetPrivateProfileInt("Main", "bEnableExperimentalHooks", 0, iniDir);
 		g_bModifyDirectXBehavior = GetPrivateProfileInt("Main", "bModifyDirectXBehavior", 0, iniDir);
@@ -109,9 +108,10 @@ extern "C" {
 		g_bAlternateGTCFix = GetPrivateProfileInt("GTC", "bAlternateGTCFix", 0, iniDir);
 		g_bUseFlipExSwapMode = GetPrivateProfileInt("D3D9Ex", "bUseFlipExSwapMode", 0, iniDir);
 		g_bUseDynamicResources = GetPrivateProfileInt("D3D9Ex", "bUseDynamicResources", 1, iniDir);
-		g_bHeavyInlines = GetPrivateProfileInt("Inlines", "bHeavyInlines", 1, iniDir);
-		g_bLightInlines = GetPrivateProfileInt("Inlines", "bLightInlines", 0, iniDir);
-		strcpy((char*)(strrchr(iniDir, '\\') + 1), "Data\\NVSE\\Plugins\\NVTF\\AlreadyExecuted");
+		g_bHeavyInlines = 0; //GetPrivateProfileInt("Inlines", "bHeavyInlines", 1, iniDir);
+		g_bLightInlines = 0; //GetPrivateProfileInt("Inlines", "bLightInlines", 0, iniDir);
+		g_bUseDefaultPoolForBuffers = 0; // GetPrivateProfileInt("DirectX", "bUseDefaultPoolForBuffers", 0, iniDir);
+		//strcpy((char*)(strrchr(iniDir, '\\') + 1), "Data\\NVSE\\Plugins\\NVTF\\AlreadyExecuted");
 		/*if (!FileExists(iniDir))
 		{
 			
