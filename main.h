@@ -205,8 +205,8 @@ void __stdcall TimeGlobalHook(void* unused) {
 
 
 
-
-
+//test function, can be left out
+/*
 DWORD hk_GetTickCount()
 {
 
@@ -225,7 +225,7 @@ DWORD hk_GetTickCount()
 	}
 	return GetTickCount();
 }
-
+*/
 
 
 static uintptr_t FPSFix_TimeHookCall = NULL;
@@ -241,7 +241,7 @@ void DoPatches()
 {
 	//int g_bAllowDebugging = 1;
 	//if (g_bAllowDebugging)	SafeWriteBuf(0x4DAD61, "\x90\x90\x90\x90\x90\x90\x90", 7);
-
+	SafeWriteBuf(0x09F9968, "\xC2\x04\x00\xCC\xCC\xCC", 6);
 	if (g_bEnableExperimentalHooks) {
 		if (g_bRemoveRCSafeGuard)	RemoveRefCountSafeGuard();
 		if (g_bRemoveRendererLockSafeGuard) RemoveRendererLockSafeGuard();
@@ -249,9 +249,7 @@ void DoPatches()
 		SafeWriteBuf(0x8728D7, "\x8B\xE5\x5D\xC3\x90\x90", 6);
 
 	}
-	if (g_bInlineStuff) {
-		HookInlines(); //	MathHooks();
-	}
+
 	//Fast Exit Hook
 	if (g_bFastExit) {
 		WriteRelJump(0x86B66E, (UInt32)FastExit);
