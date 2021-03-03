@@ -66,7 +66,6 @@ namespace D3DHooks {
 		*g_D3Device = CreateD3D9(g_bForceD3D9Ex);
 		*g_DXEx = r_d3d9ex;
 		if (!(*g_D3Device)) return -1;
-		//printf("get fucked");
 		return 0;
 	}
 	D3DDISPLAYMODEEX currentDisplayMod;
