@@ -3,5 +3,5 @@
 extern int g_bAlternateGTCFix;
 
 void FPSStartCounter();
-double GetFPSCounterMiliSeconds();
-DWORD ReturnCounter();
+double GetFPSCounterMiliSeconds_WRAP(bool doUpdate= true);
+DWORD ReturnCounter_WRAP();

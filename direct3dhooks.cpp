@@ -1,15 +1,14 @@
 #pragma once
 #include "direct3dhooks.h"
 #include "nvse/SafeWrite.h"
-
-
+#include <mutex>
 HWND foreWindow = NULL;
-int g_bToggleTripleBuffering;
-int g_bUseFlipExSwapMode;
-int g_bD3D9ManageResources;
-int g_iNumBackBuffers;
-int g_bForceD3D9Ex;
-int g_bUseDynamicResources;
+int g_bToggleTripleBuffering = 0;
+int g_bUseFlipExSwapMode = 0;
+int g_bD3D9ManageResources = 0;
+int g_iNumBackBuffers  = 0;
+int g_bForceD3D9Ex = 0;
+int g_bUseDynamicBuffers = 0;
 namespace D3DHooks {
 	bool* g_DXEx = (bool*)0x126F0D0;
 	bool r_d3d9ex = false;
@@ -70,13 +69,20 @@ namespace D3DHooks {
 	}
 	D3DDISPLAYMODEEX currentDisplayMod;
 	bool currentDisplayModExists = false;
-	HRESULT D3DAPI hk_D3D9_Reset(LPDIRECT3DDEVICE9EX This,D3DPRESENT_PARAMETERS* pPresentationParameters)
+	/*HRESULT D3DAPI hk_D3D9_Reset(LPDIRECT3DDEVICE9EX This,D3DPRESENT_PARAMETERS* pPresentationParameters)
 	{
 		ASSERT_STR(This, "D3D9 Reset ERROR");
 		if (currentDisplayModExists) return This->ResetEx(pPresentationParameters,&currentDisplayMod);
 		return This->ResetEx(pPresentationParameters, NULL);
 
+	}*/
+	void ModifyDirect3D9ExppReturnedInterface(IDirect3D9Ex* D3DInterface, IDirect3DDevice9Ex** ppReturnedDeviceInterface)
+	{
+#ifdef HAS_D3D9EX_CONTAINER_ODT 
+		//*ppReturnedDeviceInterface = new OblivionDirect3DDevice9Ex(D3DInterface, *ppReturnedDeviceInterface);;
+#endif
 	}
+
 	HRESULT D3DAPI hk_CreateDeviceEx(IDirect3D9Ex* This, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* displayMod, IDirect3DDevice9Ex** ppReturnedDeviceInterface)
 	{
 		HRESULT hr;
@@ -106,9 +112,11 @@ namespace D3DHooks {
 			}
 			if (g_bD3D9ManageResources) BehaviorFlags |= D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX;
 			hr = This->CreateDeviceEx(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, displayMod, (IDirect3DDevice9Ex * *)ppReturnedDeviceInterface);
+			
 			_MESSAGE("Using CreateDeviceEx for device creation\n");
-			auto AddressToPatch = (**(uintptr_t**)ppReturnedDeviceInterface) + 0x16 * 4;
-			SafeWrite32(AddressToPatch, (uintptr_t)hk_D3D9_Reset);
+		    ModifyDirect3D9ExppReturnedInterface(This,ppReturnedDeviceInterface);
+			//auto AddressToPatch = (**(uintptr_t**)ppReturnedDeviceInterface) + 0x16 * 4;
+			//SafeWrite32(AddressToPatch, (uintptr_t)hk_D3D9_Reset);
 
 		}
 
@@ -138,43 +146,274 @@ namespace D3DHooks {
 		return pDevice->CreateTexture(Width, Height, Levels, Usage, Format, Pool, ppTexture, pSharedHandle);
 	}
 
+	bool Game_GetIsMenuMode()
+	{
 
+		return ((bool(__cdecl*)())(0x0702360))();
+		return true;
+	}
+	#define ECS(v) while (InterlockedCompareExchange(v, 1, NULL))
+	#define LCS(v) *v = NULL
+	namespace VertexCacheManager
+	{
+		std::multimap<UINT, IDirect3DVertexBuffer9*> BufferMap;
+		ULONG_PTR fakeVTable[0x10] = { 0 };
+		ULONG_PTR realReleaseAddress = NULL;
+		volatile DWORD lock_id;
+		UINT64 currentSize = 0;
+		bool IsFlushing = false;
+		bool IsValidForCache(UINT Usage, DWORD FVF, D3DPOOL Pool)
+		{
+			return Usage == D3DUSAGE_WRITEONLY && Pool == D3DPOOL_MANAGED && FVF == NULL;
+		}
+
+		ULONG GetRefCount(IUnknown* thisObj)
+		{
+			thisObj->AddRef();
+			return ((ULONG(_stdcall*)(void*))(realReleaseAddress))(thisObj);
+
+		}
+		IDirect3DVertexBuffer9* SearchInCache(UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool)
+		{
+			IDirect3DVertexBuffer9* retObject = NULL;
+			if (IsValidForCache(Usage, FVF, Pool) && !IsFlushing)
+			{
+				ECS(&lock_id);
+				auto BufferObjectTarget = BufferMap.lower_bound(Length);
+				if (BufferObjectTarget != BufferMap.end())
+				{
+					if (BufferObjectTarget->first <= Length * 2)
+					{
+						currentSize -= BufferObjectTarget->first;
+						BufferMap.erase(BufferObjectTarget);
+						retObject = BufferObjectTarget->second;
+						//_MESSAGE("reuse confirmed");
+					}
+				}
+				LCS(&lock_id);
+			}
+			return retObject;
+		}
+		ULONG  __stdcall hk_Release(IDirect3DVertexBuffer9* thisObj)
+		{
+			D3DVERTEXBUFFER_DESC desc;
+			thisObj->GetDesc(&desc);
+			if (GetRefCount(thisObj) > 1 || !IsValidForCache(desc.Usage, desc.FVF, desc.Pool) || IsFlushing)
+			{
+				return ((ULONG(_stdcall*)(IUnknown*))(realReleaseAddress))(thisObj);
+			}
+			else
+			{
+				ECS(&lock_id);
+				BufferMap.emplace(desc.Size, thisObj);
+				currentSize += desc.Size;
+				LCS(&lock_id);
+				return NULL;
+			}
+		}
+		void DoFlushCache()
+		{
+			ECS(&lock_id);
+			IsFlushing = true;
+			for (auto itr = BufferMap.crbegin(); itr != BufferMap.crend(); ++itr) {
+				((ULONG(_stdcall*)(IUnknown*))(realReleaseAddress))(itr->second);
+
+			}
+			BufferMap.clear();
+			IsFlushing = false;
+			currentSize = 0;
+			LCS(&lock_id);
+
+		}
+
+
+	} ;
+
+
+	namespace IndexCacheManager
+	{
+		std::multimap<UINT, IDirect3DIndexBuffer9*> BufferMap;
+		ULONG_PTR fakeVTable[0x10] = { 0 };
+		ULONG_PTR realReleaseAddress = NULL;
+		volatile DWORD lock_id;
+		UINT64 currentSize = 0;
+		bool IsFlushing = false;
+		bool IsValidForCache(UINT Usage, D3DFORMAT Format, DWORD Pool)
+		{
+			return Usage == NULL && Pool == D3DPOOL_MANAGED && Format == D3DFMT_INDEX16;
+		}
+		IDirect3DIndexBuffer9* SearchInCache(UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool)
+		{
+			IDirect3DIndexBuffer9* retObject = NULL;
+			if (IsValidForCache(Usage, Format, Pool) && !IsFlushing)
+			{
+				ECS(&lock_id);
+				auto BufferObjectTarget = BufferMap.lower_bound(Length);
+				if (BufferObjectTarget != BufferMap.end())
+				{
+					if (BufferObjectTarget->first <= Length * 2)
+					{
+						currentSize -= BufferObjectTarget->first;
+						BufferMap.erase(BufferObjectTarget);
+						retObject = BufferObjectTarget->second;
+						//_MESSAGE("reuse confirmed");
+					}
+				}
+				LCS(&lock_id);
+
+			}
+			return retObject;
+		}
+		ULONG GetRefCount(IUnknown* thisObj)
+		{
+			thisObj->AddRef();
+			return ((ULONG(_stdcall*)(void*))(realReleaseAddress))(thisObj);
+
+		}
+		ULONG  __stdcall hk_Release(IDirect3DIndexBuffer9* thisObj)
+		{
+			D3DINDEXBUFFER_DESC desc;
+			thisObj->GetDesc(&desc);
+			if (GetRefCount(thisObj) > 1 || !IsValidForCache(desc.Usage, desc.Format, desc.Pool) || IsFlushing)
+			{
+				return ((ULONG(_stdcall*)(IUnknown*))(realReleaseAddress))(thisObj);
+			}
+			else
+			{
+				ECS(&lock_id);
+				BufferMap.emplace(desc.Size, thisObj);
+				currentSize += desc.Size;
+				LCS(&lock_id);
+				return NULL;
+			}
+		}
+		void DoFlushCache()
+		{
+			ECS(&lock_id);
+			IsFlushing = true;
+			for (auto itr = BufferMap.crbegin(); itr != BufferMap.crend(); ++itr) {
+				((ULONG(_stdcall*)(IUnknown*))(realReleaseAddress))(itr->second);
+
+			}
+			BufferMap.clear();
+			IsFlushing = false;
+			currentSize = 0;
+			LCS(&lock_id);
+
+		}
+
+	};
+
+
+	/*
 	HRESULT __stdcall hk_CreateVertexBuffer(LPDIRECT3DDEVICE9 pDevice, UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9** ppVertexBuffer, HANDLE* pSharedHandle)
 	{
+		
 		//_MESSAGE("vtable here: %X", *(UINT * )ppVertexBuffer);
 		//Pool = IsD3D9ExAvailable() == 0 ? Pool : D3DPOOL_DEFAULT;
 		Usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
-		Usage |= D3DUSAGE_DYNAMIC;
-		//Usage |= D3DUSAGE_WRITEONLY;
-		Pool = D3DPOOL_DEFAULT;
+	//	Usage |= D3DUSAGE_DYNAMIC;
+	//	Usage |= D3DUSAGE_WRITEONLY;
+		//Pool = D3DPOOL_DEFAULT;
+		if (!Game_GetIsMenuMode())
+			_MESSAGE("Vertex Buffer: %u, %u, %u, %u", Length, Usage, Pool, FVF);
 		HRESULT hr = pDevice->CreateVertexBuffer(Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
 		//(*ppVertexBuffer)->Lock(1, 1, NULL, 1);
 		return hr;
-	}
-	HRESULT __stdcall hk_CreateIndexBuffer(LPDIRECT3DDEVICE9 pDevice, UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle)
+	}*/
+
+	unsigned long iTotalCacheSize = 250 * 1024 * 1024;
+
+	HRESULT __stdcall hk_CreateVertexBuffer(LPDIRECT3DDEVICE9 pDevice, UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9** ppVertexBuffer, HANDLE* pSharedHandle)
 	{
-		Usage &= ~D3DUSAGE_SOFTWAREPROCESSING;
-		Usage |= D3DUSAGE_DYNAMIC;
-		//Usage |= D3DUSAGE_WRITEONLY;
-		Pool = D3DPOOL_DEFAULT;
-		HRESULT hr = pDevice->CreateIndexBuffer(Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
+
+		HRESULT hr = NULL;
+		if (!VertexCacheManager::realReleaseAddress)// Initial pass
+		{
+			hr = pDevice->CreateVertexBuffer(Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
+			VertexCacheManager::realReleaseAddress = (**(UINT * **)ppVertexBuffer)[2];
+			SafeWriteBuf((uintptr_t)VertexCacheManager::fakeVTable, (**(UINT ***)ppVertexBuffer), sizeof(VertexCacheManager::fakeVTable));
+			VertexCacheManager::fakeVTable[2] = (LONG_PTR)VertexCacheManager::hk_Release;
+
+		}
+		else
+		{
+			if (VertexCacheManager::currentSize > ((iTotalCacheSize/5)*4))
+			{
+				VertexCacheManager::DoFlushCache();
+			}
+			if (auto VertexBufferInCache = VertexCacheManager::SearchInCache(Length, Usage, FVF, Pool))
+			{
+				*ppVertexBuffer = VertexBufferInCache;
+				return D3D_OK;
+			}
+			
+			hr = pDevice->CreateVertexBuffer(Length, Usage, FVF, Pool, ppVertexBuffer, pSharedHandle);
+			if (VertexCacheManager::IsValidForCache(Usage, FVF, Pool)) (**(ULONG_PTR * **)ppVertexBuffer) = VertexCacheManager::fakeVTable;
+
+		}
 		//_MESSAGE("vtable here: %X", *(UINT*)ppIndexBuffer);
 		return hr;
 	}
+
+	HRESULT __stdcall hk_CreateIndexBuffer(LPDIRECT3DDEVICE9 pDevice, UINT Length, DWORD Usage, D3DFORMAT Format, D3DPOOL Pool, IDirect3DIndexBuffer9** ppIndexBuffer, HANDLE* pSharedHandle)
+	{
+		//return pDevice->CreateIndexBuffer(Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
+		HRESULT hr = NULL;
+		if (!IndexCacheManager::realReleaseAddress)// Initial pass
+		{
+			hr = pDevice->CreateIndexBuffer(Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
+			IndexCacheManager::realReleaseAddress = (**(UINT * **)ppIndexBuffer)[2];
+			SafeWriteBuf((uintptr_t)IndexCacheManager::fakeVTable, (**(UINT * **)ppIndexBuffer), sizeof(IndexCacheManager::fakeVTable));
+			IndexCacheManager::fakeVTable[2] = (LONG_PTR)IndexCacheManager::hk_Release;
+
+		}
+		else
+		{
+			if (IndexCacheManager::currentSize > (iTotalCacheSize/5))
+			{
+				IndexCacheManager::DoFlushCache();
+			}
+			if (auto IndexBufferInCache = IndexCacheManager::SearchInCache(Length, Usage, Format, Pool))
+			{
+				*ppIndexBuffer = IndexBufferInCache;
+				return D3D_OK;
+			}
+
+			hr = pDevice->CreateIndexBuffer(Length, Usage, Format, Pool, ppIndexBuffer, pSharedHandle);
+			if (IndexCacheManager::IsValidForCache(Usage, Format, Pool)) (**(ULONG_PTR ***)ppIndexBuffer) = IndexCacheManager::fakeVTable;
+
+		}
+		//_MESSAGE("vtable here: %X", *(UINT*)ppIndexBuffer);
+		return hr;
+	}
+	 
 	HRESULT __stdcall hk_VertexBufferLock(IDirect3DVertexBuffer9* ppVertexBuffer, UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 	{
-		/*Flags |= D3DLOCK_NOOVERWRITE;
-		Flags |= D3DLOCK_DISCARD;
-		Flags |= D3DLOCK_NOSYSLOCK;*/
+		//Flags |= D3DLOCK_NOOVERWRITE;
+		//Flags |= D3DLOCK_DISCARD;
+		D3DVERTEXBUFFER_DESC desc;
+		ppVertexBuffer->GetDesc(&desc);
+		if (!(desc.Usage & D3DUSAGE_DYNAMIC))
+		{
+			Flags |= D3DLOCK_NOOVERWRITE;
+
+		}
+		//Flags |= D3DLOCK_DISCARD;
+		//Flags |= D3DLOCK_NOSYSLOCK;
 		HRESULT hr = ppVertexBuffer->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
 		return hr;
 	}
 	HRESULT __stdcall hk_IndexBufferLock(IDirect3DIndexBuffer9* ppIndexBuffer, UINT OffsetToLock, UINT SizeToLock, void** ppbData, DWORD Flags)
 	{
 		//_MESSAGE("flegs: 0%X", Flags);
-		/*Flags |= D3DLOCK_NOOVERWRITE;
-		Flags |= D3DLOCK_DISCARD;
-		Flags |= D3DLOCK_NOSYSLOCK;*/
+		//Flags |= D3DLOCK_NOOVERWRITE;
+		//Flags |= D3DLOCK_DISCARD;
+		D3DINDEXBUFFER_DESC desc;
+		ppIndexBuffer->GetDesc(&desc);
+
+		//Flags |= D3DLOCK_NOOVERWRITE;
+		//Flags |= D3DLOCK_NOSYSLOCK;
 		HRESULT hr = ppIndexBuffer->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
 		return hr;
 	}
@@ -268,13 +507,13 @@ namespace D3DHooks {
 			WriteRelCall(0xE8F42B, (uintptr_t)hk_CreateIndexBuffer);
 			SafeWrite8(0xE8F2A0, 0xBA);
 			SafeWrite32(0xE8F2A1, (uintptr_t)hk_CreateIndexBuffer);
-			/*//VertexLock
-			SafeWrite32(0xE8C014, 0xB8909090);
+			//VertexLock
+			/*SafeWrite32(0xE8C014, 0xB8909090);
 			SafeWrite32(0xE8C018, (uintptr_t)AsmHandleVertexBufferLock);
 			//Index Lock
 			SafeWrite32(0xE8F2FD, 0xB8909090);
 			SafeWrite32(0xE8F301, (uintptr_t)AsmHandleIndexBufferLock);*/
-			if (!ToggleDynamicResources)
+			/*if (false && !ToggleDynamicResources)
 			{
 				SafeWriteBuf(0xE680D7, "\xB3\x00\x90", 3);
 				SafeWriteBuf(0xE6835F, "\xB3\x00\x90", 3);
@@ -284,7 +523,7 @@ namespace D3DHooks {
 				WriteRelCall(0xE68388, (UInt32)AsmHandleCreateTextureHook);
 				SafeWrite32(0xE6838D, 0x90909090);
 				return;
-			}
+			}*/
 
 		}
 

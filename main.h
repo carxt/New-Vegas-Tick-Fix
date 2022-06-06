@@ -11,39 +11,43 @@ DWORD* InterfSingleton = (DWORD*)0x11D8A80;
 
 
 int g_bGTCFix = 0;
+int g_bAllowDirectXDebugging = 0;
 int g_bAllowBrightnessChangeWindowed = 0;
 int g_bFastExit = 0;
-int g_bInlineStuff = 0;
 int g_bFPSFix = 0;
 int g_iMaxFPS = 1;
 int g_iMinFPS = 1;
-int g_bSpinCriticalSections = 1;
 int g_bfMaxTime;
-int g_bEnableExperimentalHooks = 0;
+int g_bEnableThreadingTweaks = 0;
 int g_bRemoveRCSafeGuard = 0;
-int g_bRemoveRendererLockSafeGuard = 0;
 int g_bTweakMiscCriticalSections = 0;
 int g_bSpiderHandsFix = 0;
 float g_iDialogFixMult = 1;
 double	DesiredMax = 1;
-double	DesiredMin = 1;
+double	DesiredMin = 1000;
 double	HavokMax = 1;
 double	HavokMin = 1;
 int g_bModifyDirectXBehavior = 1;
 int g_bRedoHashtables = 0;
 int g_bResizeHashtables;
-int g_bReplaceHashingAlgorithm;
 int g_bAlternateGTCFix = 0;
-int g_bLightInlines = 0;
-int g_bHeavyInlines = 0;
+int g_bRemoveGTCLimits = 0;
 int g_bAutomaticFPSFix = 0;
-int g_bUseDefaultPoolForBuffers = 0;
+int g_bUseExperimentalCacheForBuffers = 0;
+
+
+
+
+
+
+
 #include "hooks.h"
 #include "FPSTimer.h"
 #include "GameUI.h"
 #include "direct3dhooks.h"
 #include "CriticalSections.h"
 #include <intrin.h>
+#include <thread>
 
 InterfaceManager* InterfaceManager::GetSingleton()
 {
@@ -167,11 +171,32 @@ void __stdcall TimeGlobalHook(void* unused) {
 
 }
 */
+ //uintptr_t OriginalDisplayCall;
+std::chrono::steady_clock::time_point FPSTargetClock;
+ uintptr_t __fastcall FPSLimt() {
+	//bool resResult = ThisStdCall_B(OriginalDisplayCall, thisObj);
+	//int FPSTarget = 50;
+	//int CurrentFPS = 1000 / GetFPSCounterMiliSeconds_WRAP(false);
+	double FPSTarget = 50;
+	auto CurrentClock = std::chrono::steady_clock::now();
+	if (FPSTargetClock > CurrentClock)
+	{
+		std::this_thread::sleep_for(FPSTargetClock - CurrentClock);
+		//std::this_thread::sleep_until(FPSTargetClock);
+
+	}
+	FPSTargetClock = std::chrono::steady_clock::now() + std::chrono::milliseconds(unsigned int(1000/FPSTarget));
+	//auto targetSleep = ((std::chrono::microseconds(std::chrono::seconds(1)) / FPSTarget) - std::chrono::microseconds(std::chrono::seconds(long long((GetFPSCounterMiliSeconds_WRAP(false) + 1) / 1000))));
+	//auto target_tp = std::chrono::steady_clock::now() + targetSleep;
+	//std::this_thread::sleep_until(target_tp);
+	return 0;
+ }
 
 void __stdcall TimeGlobalHook(void* unused) {
-
-	double Delta = GetFPSCounterMiliSeconds();
-	if (g_bfMaxTime)* fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime && Delta > DesiredMax) ? Delta / 1000 : DefaultMaxTime / 1000);
+	//FPSLimt(nullptr);
+	double Delta = GetFPSCounterMiliSeconds_WRAP();
+	//FPSLimitClock = std::chrono::steady_clock::now();
+	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : DefaultMaxTime / 1000);
 
 	if (*g_IsMenuMode)
 	{
@@ -194,8 +219,13 @@ void __stdcall TimeGlobalHook(void* unused) {
 	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
 	{
 		//__asm {int 3}
+		/*
 		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.987);
 		if (g_bfMaxTime)* fMaxTime = *g_FPSGlobal / 1000;
+		*/
+		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.9825);
+		if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * 0.9825);
+		if (*fMaxTime < FLT_EPSILON || *fMaxTime > DefaultMaxTime) *fMaxTime = DefaultMaxTime / 1000;
 	}
 
 }
@@ -203,7 +233,24 @@ void __stdcall TimeGlobalHook(void* unused) {
 
 
 
+void __stdcall TimeGlobalHook_NoSafeGuards(void* unused) {
 
+	double Delta = GetFPSCounterMiliSeconds_WRAP();
+	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : DefaultMaxTime / 1000);
+
+	*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
+
+	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
+	{
+		//__asm {int 3}
+		/**g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.987);
+		if (g_bfMaxTime)* fMaxTime = *g_FPSGlobal / 1000;*/
+		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.9825);
+		if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * 0.9825);
+		if (*fMaxTime < FLT_EPSILON || *fMaxTime > DefaultMaxTime) *fMaxTime = DefaultMaxTime;
+	}
+
+}
 
 //test function, can be left out
 /*
@@ -227,26 +274,50 @@ DWORD hk_GetTickCount()
 }
 */
 
+__declspec (naked) void asm_FPSTrailHook()
+{
+	__asm
+	{
+		pop esi
+		mov esp, ebp
+		pop ebp
+		jmp FPSLimt
+	}
+}
 
 static uintptr_t FPSFix_TimeHookCall = NULL;
 void HookFPSStuff()
 {
+
+	//WriteRelJump(0x086EF2B, (uintptr_t)asm_FPSTrailHook);
+	//OriginalDisplayCall = (*(uintptr_t*)0x10EE640);
+	//SafeWrite32(0x10EE640, (uintptr_t)FPSLimt);
 	//SafeWriteBuf(0x86E65A, "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90", 0x11);
-	FPSFix_TimeHookCall = (uintptr_t)(&TimeGlobalHook);
+	if (!g_bRemoveGTCLimits) { FPSFix_TimeHookCall = (uintptr_t)(TimeGlobalHook); }
+	else { FPSFix_TimeHookCall = (uintptr_t)(TimeGlobalHook_NoSafeGuards); }
 		if (FPSFix_TimeHookCall) WriteRelCall((uintptr_t)0x086E667, FPSFix_TimeHookCall);
 }
 
 
+
+void __stdcall SleepHook(DWORD dwMiliseconds) {
+	if  (dwMiliseconds <= 0){
+		SwitchToThread();
+	}
+	Sleep(dwMiliseconds);
+}
+
 void DoPatches()
 {
-	//int g_bAllowDebugging = 1;
-	//if (g_bAllowDebugging)	SafeWriteBuf(0x4DAD61, "\x90\x90\x90\x90\x90\x90\x90", 7);
-	SafeWriteBuf(0x09F9968, "\xC2\x04\x00\xCC\xCC\xCC", 6);
-	if (g_bEnableExperimentalHooks) {
+	if (g_bAllowDirectXDebugging)
+	{//SafeWriteBuf(0x4DAD61, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		SafeWriteBuf(0x09F9968, "\xC2\x04\x00\xCC\xCC\xCC", 6);
+	}
+	if (g_bEnableThreadingTweaks) {
 		if (g_bRemoveRCSafeGuard)	RemoveRefCountSafeGuard();
-		if (g_bRemoveRendererLockSafeGuard) RemoveRendererLockSafeGuard();
+		//if (g_bRemoveRendererLockSafeGuard) RemoveRendererLockSafeGuard();
 		if (g_bTweakMiscCriticalSections) TweakMiscCriticalSections();
-		SafeWriteBuf(0x8728D7, "\x8B\xE5\x5D\xC3\x90\x90", 6);
+	//	SafeWriteBuf(0x8728D7, "\x8B\xE5\x5D\xC3\x90\x90", 6);
 
 	}
 
@@ -273,34 +344,31 @@ void DoPatches()
 		//timeBeginPeriod(1);
 		//SafeWrite32(0xFDF060, (UInt32)timeGetTime);
 		FPSStartCounter();
-		uintptr_t TargetGTC = (uintptr_t)ReturnCounter;
-		if (g_bAlternateGTCFix) {
-			timeBeginPeriod(1);  
-			SafeWrite32(0xFDF060, (UInt32)timeGetTime);
+		uintptr_t TargetGTC = (uintptr_t)ReturnCounter_WRAP;
+		if (g_bAlternateGTCFix) 
+		{
+			timeBeginPeriod(1);
 		}
-		else {
-			SafeWrite32(0xFDF060, TargetGTC);
-
-			//first two are render, rest are audio
-		/*	for (uintptr_t Destination : {0xC45995, 0xC45902, 0xADF0F9, 0xAE7619, 0xADDE34, 0xADEA26, 0xAE7777, 0x0AEA109})
-			{
-				SafeWrite8(Destination, 0x90);
-				WriteRelCall(Destination + 1, TargetGTC);
-			}*/
-		}
+		SafeWrite32(0xFDF060, TargetGTC);
 		//SafeWrite32(0xFDF060, (UInt32)hk_GetTickCount);
 		if (g_bFPSFix)
 		{
 			_MESSAGE("FPSFIX ENABLED");
 
-				DesiredMax = 1000 / double(g_iMaxFPS);
-				DesiredMin = 1000 / double(g_iMinFPS);
-				DefaultMaxTime = (*fMaxTime) * 1000;
+			DesiredMax = 1000 / double(g_iMaxFPS);
+			DesiredMin = 1000 / double(g_iMinFPS);
+			DefaultMaxTime = (*fMaxTime) * 1000;
 			HookFPSStuff();
 		}
 	}
 	if (g_bModifyDirectXBehavior)
-		D3DHooks::UseD3D9xPatchMemory(g_bForceD3D9Ex || g_bUseDefaultPoolForBuffers, g_bUseDynamicResources);
+		D3DHooks::UseD3D9xPatchMemory(g_bUseExperimentalCacheForBuffers, 1);
+	//FaceGenThreadCSLogger::HookCSForLogging();
+	//NVTFThread::init();
+
+	//Hook Sleep to become SwitchToThread
+	//SafeWrite32(0x0FDF104, (uintptr_t)SleepHook);
+
 }
 
 

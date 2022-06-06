@@ -4,13 +4,17 @@
 #pragma comment (lib, "d3d9.lib")
 #pragma comment (lib, "d3dx9.lib")
 #pragma comment (lib, "Gdiplus.lib")
+//ODT D3D9Ex
+//#include "D3D9Device.h"
+#define HAS_D3D9EX_CONTAINER_ODT 1
+
 extern HWND foreWindow;
 extern int g_bToggleTripleBuffering;
 extern int g_bUseFlipExSwapMode;
 extern int g_bD3D9ManageResources;
 extern int g_iNumBackBuffers;
 extern int g_bForceD3D9Ex;
-extern int g_bUseDynamicResources;
+extern int g_bUseDynamicBuffers;
 namespace D3DHooks {
 	extern bool* g_DXEx;
 	extern bool r_d3d9ex;

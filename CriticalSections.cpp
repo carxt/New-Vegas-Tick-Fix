@@ -276,13 +276,13 @@ void RemoveRendererLockSafeGuard()
 
 
 
-void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
+void WINAPI hk_EnterCriticalSection_OLD(LPCRITICAL_SECTION cs)
 {
 	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
 	if (spinCount > 100) return EnterCriticalSection(cs);
 	spinCount = 800;
 	unsigned int i = 0;
-	while (i <= 50)
+	while (i <= 100)
 	{
 		if (TryEnterCriticalSection(cs)) return;
 		i++;
@@ -303,9 +303,31 @@ void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
 	return EnterCriticalSection(cs);
 }
 
+
+void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
+{
+	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
+	if (spinCount > 100) return EnterCriticalSection(cs);
+	spinCount = 1500;
+	unsigned int i = 0;
+	while (i <= 100)
+	{
+		if (TryEnterCriticalSection(cs)) return;
+		i++;
+	}
+	while (i <= spinCount)
+	{
+		if (TryEnterCriticalSection(cs)) return;
+		Sleep(0);
+		i++;
+	}
+	return EnterCriticalSection(cs);
+}
+
+
 BOOL WINAPI hk_InitializeCriticalSectionhook(LPCRITICAL_SECTION cs)
 {
-	return InitializeCriticalSectionEx(cs, 4000, RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO);
+	return InitializeCriticalSectionEx(cs, 2400, RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO);
 	cs->SpinCount &= ~(RTL_CRITICAL_SECTION_ALL_FLAG_BITS) | RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO;
 
 }
