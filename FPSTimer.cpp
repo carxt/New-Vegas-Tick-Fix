@@ -8,7 +8,7 @@ namespace QPC {
 	DWORD ReturnCounter()
 	{
 		auto Now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch()));
-		return unsigned long(Now.count() - GetTickCountBias);
+		return unsigned long(Now.count() + GetTickCountBias);
 	}
 	double GetFPSCounterMiliSeconds()
 	{
@@ -27,7 +27,7 @@ namespace tGt
 	signed int GetTickCountBias = 0;
 	DWORD ReturnCounter()
 	{
-		return unsigned long(timeGetTime() - GetTickCountBias);
+		return unsigned long(timeGetTime() + GetTickCountBias);
 	}
 	double GetFPSCounterMiliSeconds()
 	{
@@ -45,7 +45,9 @@ void FPSStartCounter()
 {
 	auto Now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch()));
 	long duration = Now.count();
-	QPC::GetTickCountBias = duration - long(GetTickCount());
+
+
+	QPC::GetTickCountBias = duration - long(GetTickCount()); //this would proooooooobably fail if your system was started 53 days ago, but at that point idc
 	QPC::lastCount = duration;
 	//this one is for timeGetTime
 	tGt::lastCount = timeGetTime();

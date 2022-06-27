@@ -6,7 +6,7 @@
 #pragma comment (lib, "Gdiplus.lib")
 //ODT D3D9Ex
 //#include "D3D9Device.h"
-#define HAS_D3D9EX_CONTAINER_ODT 1
+#define HAS_D3D9EX_CONTAINER_ODT 0
 
 extern HWND foreWindow;
 extern int g_bToggleTripleBuffering;
@@ -27,5 +27,5 @@ namespace D3DHooks {
 	HRESULT D3DAPI hk_CreateDeviceEx(IDirect3D9Ex* This, UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* displayMod, IDirect3DDevice9Ex** ppReturnedDeviceInterface);
 	void AsmHandleDirectXExCreation();
 	void hk_SetGammaRamp(LPDIRECT3DDEVICE9 pDevice, UINT iSwapChain, DWORD Flags, const D3DGAMMARAMP* pRamp);
-	void UseD3D9xPatchMemory(int ForceD3D9Ex, int ToggleDynamicResources);
+	void UseD3D9xPatchMemory();
 }

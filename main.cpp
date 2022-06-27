@@ -73,7 +73,6 @@ extern "C" {
 		_MESSAGE("LS : 1");
 		GetModuleFileNameA(GetModuleHandle(NULL), iniDir, MAX_PATH);
 		strcpy((char*)(strrchr(iniDir, '\\') + 1), "Data\\NVSE\\Plugins\\NVTF.ini");
-		_MESSAGE("%s", iniDir);
 		g_bGTCFix = GetPrivateProfileInt("Main", "bGTCFix", 0, iniDir);
 		g_bAllowBrightnessChangeWindowed = GetPrivateProfileInt("Main", "bAllowBrightnessChangeWindowed", 0, iniDir);
 		g_bFastExit = GetPrivateProfileInt("Main", "bFastExit", 1, iniDir);
@@ -108,6 +107,8 @@ extern "C" {
 		//g_bUseDynamicBuffers = GetPrivateProfileInt("D3D9Ex", "bUseDynamicResources", 1, iniDir);
 		//g_bUseFlipExSwapMode = GetPrivateProfileInt("D3D9Ex", "bUseFlipExSwapMode", 0, iniDir);
 		//g_bForceD3D9Ex = GetPrivateProfileInt("DirectX", "bUseD3D9Ex", 0, iniDir);
+
+		//Feel like adding this one ngl
 		/*if (!FileExists(iniDir))
 		{
 			

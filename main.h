@@ -140,37 +140,6 @@ inline UInt32 Calculaterel32(UInt32 Destination, UInt32 source)
  bool* g_DialogMenu2 = (bool*)0x11DEA2B;
 
 
- /*
-void __stdcall TimeGlobalHook(void* unused) {
-	double Delta = GetFPSCounterMiliSeconds(); 
-	if (*g_IsMenuMode)
-	{
-		
-		if (*g_DialogMenu2 || *g_DialogMenu)
-		{
-			*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax / g_iDialogFixMult) ? Delta : DesiredMax / g_iDialogFixMult) : DesiredMin) : 0;
-			if (g_bfMaxTime)* fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime && Delta > DesiredMax) ? Delta / 1000 : DefaultMaxTime / 1000);
-		}
-		else
-		{
-			*g_FPSGlobal = 0;
-			*fMaxTime = DefaultMaxTime;
-		}
-	}
-	else
-	{
-		*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
-		if (g_bfMaxTime)* fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime && Delta > DesiredMax) ? Delta / 1000 : DefaultMaxTime / 1000);
-	}
-	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
-	{
-		//__asm {int 3}
-		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.987);
-		if (g_bfMaxTime)* fMaxTime = *g_FPSGlobal / 1000;
-	}
-
-}
-*/
  //uintptr_t OriginalDisplayCall;
 std::chrono::steady_clock::time_point FPSTargetClock;
  uintptr_t __fastcall FPSLimt() {
@@ -362,12 +331,8 @@ void DoPatches()
 		}
 	}
 	if (g_bModifyDirectXBehavior)
-		D3DHooks::UseD3D9xPatchMemory(g_bUseExperimentalCacheForBuffers, 1);
-	//FaceGenThreadCSLogger::HookCSForLogging();
-	//NVTFThread::init();
+		D3DHooks::UseD3D9xPatchMemory();
 
-	//Hook Sleep to become SwitchToThread
-	//SafeWrite32(0x0FDF104, (uintptr_t)SleepHook);
 
 }
 
