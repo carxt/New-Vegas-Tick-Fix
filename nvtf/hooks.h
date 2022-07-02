@@ -63,16 +63,7 @@ void DoHashTableStuff()
 		SafeWrite8(0x00AD91A9, 113);
 		SafeWrite8(0x00AD91CC, 41);
 		//6o
-		/*SafeWrite32(0x00A2EFDF, 607);
-		SafeWrite32(0x00A2EFED, 151);
-		SafeWrite32(0x00A660B7, 641);
-		SafeWrite32(0x00A660C4, 163);
-		SafeWrite32(0x00B61841, 1213);
-		//SafeWrite32(0x00B61854, 307); // crash
-		SafeWrite32(0x00B7FF73, 991);
-		SafeWrite32(0x00B7FF85, 251);
-		SafeWrite32(0x00B9A5EB, 631);
-		SafeWrite32(0x00B9A5FD, 157);*/
+
 		
 	}
 
