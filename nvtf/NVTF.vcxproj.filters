@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="nvse">
+      <UniqueIdentifier>{aaf5e4e0-c48a-4492-81b0-ab025f6ce945}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="internal">
+      <UniqueIdentifier>{ef68e414-f3da-4f7d-94dc-3f7383074f7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="internal\sha1">
+      <UniqueIdentifier>{3adfd2de-9eb8-4167-b169-c1d949ac8bb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="internal\md5">
+      <UniqueIdentifier>{b7996e18-8544-4a8f-a86a-e5b5b117ad8d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\nvse\nvse\SafeWrite.cpp">
+      <Filter>nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="internal\utility.cpp">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\md5\md5.cpp">
+      <Filter>internal\md5</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\sha1\sha1.cpp">
+      <Filter>internal\sha1</Filter>
+    </ClCompile>
+    <ClCompile Include="CriticalSections.cpp" />
+    <ClCompile Include="direct3dhooks.cpp" />
+    <ClCompile Include="FPSTimer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\nvse\nvse\SafeWrite.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h" />
+    <ClInclude Include="hooks.h" />
+    <ClInclude Include="FPSTimer.h" />
+    <ClInclude Include="internal\containers.h">
+      <Filter>internal</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\utility.h">
+      <Filter>internal</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\md5\md5.h">
+      <Filter>internal\md5</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\sha1\sha1.h">
+      <Filter>internal\sha1</Filter>
+    </ClInclude>
+    <ClInclude Include="CriticalSections.h" />
+    <ClInclude Include="direct3dhooks.h" />
+    <ClInclude Include="..\nvse\nvse\nvse_version.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\PluginAPI.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\prefix.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse\Utilities.h">
+      <Filter>nvse</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="exports.def" />
+  </ItemGroup>
+</Project>
