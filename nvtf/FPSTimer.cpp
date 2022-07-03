@@ -27,7 +27,7 @@ namespace tGt
 	signed int GetTickCountBias = 0;
 	DWORD ReturnCounter()
 	{
-		return unsigned long(timeGetTime() + GetTickCountBias);
+		return unsigned long(long(timeGetTime()) + GetTickCountBias);
 	}
 	double GetFPSCounterMiliSeconds()
 	{
