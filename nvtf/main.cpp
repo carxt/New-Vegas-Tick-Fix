@@ -81,16 +81,13 @@ extern "C" {
 		g_bAllowDirectXDebugging = GetPrivateProfileInt("Main", "bAllowDirectXDebugging", 0, iniDir);
 		if (g_bGTCFix <= 0 && g_bFastExit <= 0 && g_bEnableThreadingTweaks <= 0 && g_bModifyDirectXBehavior <= 0 && g_bAllowBrightnessChangeWindowed <= 0 && g_bRedoHashtables <= 0 && g_bAllowDirectXDebugging <= 0) return false;
 		PrintLog("LS : 2");
-		char floatbuffer[0x40];
 		g_iSpinCount = 0;// GetPrivateProfileInt("CS", "iSpinCount", -1, iniDir);
 		g_bFPSFix = GetPrivateProfileInt("GTC", "bFPSFix", 0, iniDir);
 		g_bAutomaticFPSFix = 0;
 		g_iMaxFPS = GetPrivateProfileInt("FPSFix", "iMaxFPSTolerance", 59, iniDir);
 		g_iMinFPS = GetPrivateProfileInt("FPSFix", "iMinFPSTolerance", 20, iniDir);
 		g_bfMaxTime = GetPrivateProfileInt("FPSFix", "bfMaxTime", 1, iniDir);
-		GetPrivateProfileString("FPSFix", "fDialogFixMult", "2.0000", floatbuffer, 0x3F, iniDir);
 		g_bResizeHashtables = GetPrivateProfileInt("Hashtables", "bResizeHashtables", 1, iniDir);
-		g_iDialogFixMult = atof(floatbuffer);
 		// bRemoveRCSafeGuard and bRemove0x80SafeGuard are left as legacy names
 		g_bRemoveRCSafeGuard = GetPrivateProfileInt("ThreadingTweaks", "bRemoveRCSafeGuard", 0, iniDir);
 		g_bTweakMiscCriticalSections= GetPrivateProfileInt("ThreadingTweaks", "bTweakMiscCriticalSections", 0, iniDir);

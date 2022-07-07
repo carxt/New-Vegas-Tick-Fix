@@ -6,7 +6,7 @@ UINT32 LastTime;
 UINT32 OriginalFunction;
 float* fMaxTime = (float*)0x1267B38;
 bool initTimeHook = false;
-float DefaultMaxTime = 0;
+float fLowerMaxTimeBoundary = 0;
 DWORD* InterfSingleton = (DWORD*)0x11D8A80;
 
 
@@ -22,7 +22,6 @@ int g_bEnableThreadingTweaks = 0;
 int g_bRemoveRCSafeGuard = 0;
 int g_bTweakMiscCriticalSections = 0;
 int g_bSpiderHandsFix = 0;
-float g_iDialogFixMult = 1;
 double	DesiredMax = 1;
 double	DesiredMin = 1000;
 double	HavokMax = 1;
@@ -69,7 +68,7 @@ enum StartMenuFlags
 	kControllerInputDebounce = 0x4000000,
 };
 
-static uintptr_t* GetStartMenuSingleton() { return *(uintptr_t* *)0x11DAAC0; };
+static uintptr_t* GetStartMenuSingleton() { return *(uintptr_t**)0x11DAAC0; };
 void ResetBrightness()
 {
 	if (foreWindow && D3DHooks::SetGammaRampInit)
@@ -82,13 +81,13 @@ void ResetBrightness()
 void FastExit()
 {
 	ResetBrightness();
-	/*for (auto it = MapLogger.begin(); it != MapLogger.end(); ++it) 
+	/*for (auto it = MapLogger.begin(); it != MapLogger.end(); ++it)
 	{
 		_MESSAGE("Address 0x%X called %i times", it->first, it->second);
 	}*/
-	if (UInt32 start = (UInt32) GetStartMenuSingleton())
+	if (UInt32 start = (UInt32)GetStartMenuSingleton())
 	{
-		if (*(UInt32*)(start  + 0x1A8) & StartMenuFlags::kHasChangedSettings)
+		if (*(UInt32*)(start + 0x1A8) & StartMenuFlags::kHasChangedSettings)
 		{
 			((void (*)(void))(0x7D6D70))(); // SaveIniSettings
 		}
@@ -129,14 +128,14 @@ inline UInt32 Calculaterel32(UInt32 Destination, UInt32 source)
 
 
 //volatile double Delta;
- bool* g_DialogMenu = (bool*)0X11D9514;
- bool* g_IsMenuMode = (bool*)0x11DEA2B;
- bool* g_DialogMenu2 = (bool*)0x11DEA2B;
+bool* g_DialogMenu = (bool*)0X11D9514;
+bool* g_IsMenuMode = (bool*)0x11DEA2B;
+bool* g_DialogMenu2 = (bool*)0x11DEA2B;
 
 
- //uintptr_t OriginalDisplayCall;
+//uintptr_t OriginalDisplayCall;
 std::chrono::steady_clock::time_point FPSTargetClock;
- uintptr_t __fastcall FPSLimt() {
+uintptr_t __fastcall FPSLimt() {
 	//bool resResult = ThisStdCall_B(OriginalDisplayCall, thisObj);
 	//int FPSTarget = 50;
 	//int CurrentFPS = 1000 / GetFPSCounterMiliSeconds_WRAP(false);
@@ -148,47 +147,36 @@ std::chrono::steady_clock::time_point FPSTargetClock;
 		//std::this_thread::sleep_until(FPSTargetClock);
 
 	}
-	FPSTargetClock = std::chrono::steady_clock::now() + std::chrono::milliseconds(unsigned int(1000/FPSTarget));
+	FPSTargetClock = std::chrono::steady_clock::now() + std::chrono::milliseconds(unsigned int(1000 / FPSTarget));
 	//auto targetSleep = ((std::chrono::microseconds(std::chrono::seconds(1)) / FPSTarget) - std::chrono::microseconds(std::chrono::seconds(long long((GetFPSCounterMiliSeconds_WRAP(false) + 1) / 1000))));
 	//auto target_tp = std::chrono::steady_clock::now() + targetSleep;
 	//std::this_thread::sleep_until(target_tp);
 	return 0;
- }
+}
 
+
+constexpr float fTimerOffsetMult = 0.9825; // I have no idea why this works but it does.
 void __stdcall TimeGlobalHook(void* unused) {
 	//FPSLimt(nullptr);
 	double Delta = GetFPSCounterMiliSeconds_WRAP();
 	//FPSLimitClock = std::chrono::steady_clock::now();
-	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : DefaultMaxTime / 1000);
+	if (g_bfMaxTime)*fMaxTime = (Delta > FLT_EPSILON) ? ((Delta < DesiredMin) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : DesiredMin / 1000) : fLowerMaxTimeBoundary / 1000 ;
 
-	if (*g_IsMenuMode)
+	if (!*g_IsMenuMode || !(!*g_DialogMenu2 && !*g_DialogMenu))
 	{
-
-		if (*g_DialogMenu2 || *g_DialogMenu)
-		{
-			*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax / g_iDialogFixMult) ? Delta : DesiredMax / g_iDialogFixMult) : DesiredMin) : 0;
-
-		}
-		else
-		{
-			*g_FPSGlobal = 0;
-		}
+		*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
 	}
 	else
 	{
-		*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
+		*g_FPSGlobal = 0;
 	}
 
 	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
 	{
-		//__asm {int 3}
-		/*
-		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.987);
-		if (g_bfMaxTime)* fMaxTime = *g_FPSGlobal / 1000;
-		*/
-		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.9825);
-		if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * 0.9825);
-		if (*fMaxTime < FLT_EPSILON || *fMaxTime > DefaultMaxTime) *fMaxTime = DefaultMaxTime / 1000;
+		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
+		if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
+		if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
+	//	if (*fMaxTime > ((DesiredMin / 1000))) *fMaxTime = ((DesiredMin / 1000));
 	}
 
 }
@@ -199,21 +187,22 @@ void __stdcall TimeGlobalHook(void* unused) {
 void __stdcall TimeGlobalHook_NoSafeGuards(void* unused) {
 
 	double Delta = GetFPSCounterMiliSeconds_WRAP();
-	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < DefaultMaxTime) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : DefaultMaxTime / 1000);
+	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < fLowerMaxTimeBoundary) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : fLowerMaxTimeBoundary / 1000);
 
 	*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
 
 	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
 	{
-		//__asm {int 3}
-		/**g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.987);
-		if (g_bfMaxTime)* fMaxTime = *g_FPSGlobal / 1000;*/
-		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * 0.9825);
-		if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * 0.9825);
-		if (*fMaxTime < FLT_EPSILON || *fMaxTime > DefaultMaxTime) *fMaxTime = DefaultMaxTime;
+		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
+
+		//if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
+		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
+		if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
+		if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
 	}
 
 }
+
 
 //test function, can be left out
 /*
@@ -258,13 +247,13 @@ void HookFPSStuff()
 	//SafeWriteBuf(0x86E65A, "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90", 0x11);
 	if (!g_bRemoveGTCLimits) { FPSFix_TimeHookCall = (uintptr_t)(TimeGlobalHook); }
 	else { FPSFix_TimeHookCall = (uintptr_t)(TimeGlobalHook_NoSafeGuards); }
-		if (FPSFix_TimeHookCall) WriteRelCall((uintptr_t)0x086E667, FPSFix_TimeHookCall);
+	if (FPSFix_TimeHookCall) WriteRelCall((uintptr_t)0x086E667, FPSFix_TimeHookCall);
 }
 
 
 
 void __stdcall SleepHook(DWORD dwMiliseconds) {
-	if  (dwMiliseconds <= 0){
+	if (dwMiliseconds <= 0) {
 		SwitchToThread();
 	}
 	Sleep(dwMiliseconds);
@@ -280,7 +269,7 @@ void DoPatches()
 		if (g_bRemoveRCSafeGuard)	RemoveRefCountSafeGuard();
 		//if (g_bRemoveRendererLockSafeGuard) RemoveRendererLockSafeGuard();
 		if (g_bTweakMiscCriticalSections) TweakMiscCriticalSections();
-	//	SafeWriteBuf(0x8728D7, "\x8B\xE5\x5D\xC3\x90\x90", 6);
+		//	SafeWriteBuf(0x8728D7, "\x8B\xE5\x5D\xC3\x90\x90", 6);
 
 	}
 
@@ -290,7 +279,7 @@ void DoPatches()
 	}
 	if (g_bRedoHashtables) {
 		DoHashTableStuff();
-		
+
 	}
 
 	if (g_bAllowBrightnessChangeWindowed)
@@ -308,7 +297,7 @@ void DoPatches()
 		//SafeWrite32(0xFDF060, (UInt32)timeGetTime);
 		FPSStartCounter();
 		uintptr_t TargetGTC = (uintptr_t)ReturnCounter_WRAP;
-		if (g_bAlternateGTCFix) 
+		if (g_bAlternateGTCFix)
 		{
 			timeBeginPeriod(1);
 		}
@@ -320,7 +309,7 @@ void DoPatches()
 
 			DesiredMax = 1000 / double(g_iMaxFPS);
 			DesiredMin = 1000 / double(g_iMinFPS);
-			DefaultMaxTime = (*fMaxTime) * 1000;
+			fLowerMaxTimeBoundary = (*fMaxTime) * 1000;
 			HookFPSStuff();
 		}
 	}
