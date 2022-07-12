@@ -343,3 +343,28 @@ void TweakMiscCriticalSections()
 	SafeWrite8(0xA5B571, 0x90);
 	WriteRelCall(0xA5B572, (uintptr_t)hk_InitializeCriticalSectionhook);
 }
+
+
+
+
+
+void __fastcall EnterLightCriticalSectionWrapper(BGSLightCriticalSection* ecx)
+{
+	((void(__thiscall*)(BGSLightCriticalSection*, uintptr_t))(0x40FBF0))(ecx, 0);
+}
+
+void __fastcall LeaveLightCriticalSectionWrapper(BGSLightCriticalSection* ecx)
+{
+	((void(__thiscall*)(BGSLightCriticalSection*))(0x40FBA0))(ecx);
+}
+
+
+void TurnProblematicCSIntoBusyLocks() {
+	static BGSLightCriticalSection LipFileLCS = {};
+	SafeWrite32(0x8A2252 + 1, (uintptr_t)&LipFileLCS);
+	WriteRelCall(0x8A2257, (uintptr_t)EnterLightCriticalSectionWrapper);
+	WriteRelCall(0x8A2464, (uintptr_t)LeaveLightCriticalSectionWrapper);
+	WriteRelCall(0x8A2CCE, (uintptr_t)LeaveLightCriticalSectionWrapper);
+
+	
+}

@@ -25,6 +25,11 @@ struct HeapManager
 	Heaps* memHeaps; // 08
 	static HeapManager* GetSingleton() { return (HeapManager*)0x11F6238; }
 };
+struct BGSLightCriticalSection {
+	uintptr_t OwningThreadId = 0;
+	uintptr_t LockCount = 0;
+
+};
 void __stdcall InitCriticalSectionHook(LPCRITICAL_SECTION section);
 void __stdcall func_InitCSHandler(LPCRITICAL_SECTION cs, DWORD Spin);
 void __stdcall NiObjectCSHandler(LPCRITICAL_SECTION cs1, LPCRITICAL_SECTION cs2, LPCRITICAL_SECTION cs3);
@@ -59,3 +64,4 @@ void DoHeapCriticalSectionSpin();
 void RemoveRefCountSafeGuard();
 void RemoveRendererLockSafeGuard();
 void TweakMiscCriticalSections();
+void TurnProblematicCSIntoBusyLocks();

@@ -91,6 +91,8 @@ extern "C" {
 		// bRemoveRCSafeGuard and bRemove0x80SafeGuard are left as legacy names
 		g_bRemoveRCSafeGuard = GetPrivateProfileInt("ThreadingTweaks", "bRemoveRCSafeGuard", 0, iniDir);
 		g_bTweakMiscCriticalSections= GetPrivateProfileInt("ThreadingTweaks", "bTweakMiscCriticalSections", 0, iniDir);
+		g_bReplaceDeadlockCSWithWaitAndSleep = GetPrivateProfileInt("ThreadingTweaks", "bReplaceDeadlockCSWithWaitAndSleep", 0, iniDir);
+
 		g_bSpiderHandsFix = GetPrivateProfileInt("FPSFix", "bSpiderHandsFix", 0, iniDir);
 		g_bToggleTripleBuffering = GetPrivateProfileInt("DirectX", "bToggleTripleBuffering", 0, iniDir);
 		g_bForceD3D9Ex = 0; // GetPrivateProfileInt("DirectX", "bUseD3D9Ex", 0, iniDir);
