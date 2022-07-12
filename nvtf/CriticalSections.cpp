@@ -363,7 +363,9 @@ void TurnProblematicCSIntoBusyLocks() {
 	static BGSLightCriticalSection LipFileLCS = {};
 	SafeWrite32(0x8A2252 + 1, (uintptr_t)&LipFileLCS);
 	WriteRelCall(0x8A2257, (uintptr_t)EnterLightCriticalSectionWrapper);
+	SafeWrite32(0x8A245F + 1, (uintptr_t)&LipFileLCS);
 	WriteRelCall(0x8A2464, (uintptr_t)LeaveLightCriticalSectionWrapper);
+	SafeWrite32(0x8A2CC9 + 1, (uintptr_t)&LipFileLCS);
 	WriteRelCall(0x8A2CCE, (uintptr_t)LeaveLightCriticalSectionWrapper);
 
 	
