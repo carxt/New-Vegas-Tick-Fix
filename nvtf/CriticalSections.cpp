@@ -340,14 +340,12 @@ BOOL WINAPI hk_InitializeCriticalSectionhook(LPCRITICAL_SECTION cs)
 
 __declspec (naked) void asm_EnterLCSHook() {
 	__asm {
-		spinLoop:
-		pause
-		inc ecx
 		cmp ecx, 0x80
-		jbe spinLoop
-		cmp ecx, 0x2710
-		mov dword ptr [ebp-0x44], ecx
-		setnz al
+		pause
+		jbe doneLbl
+		push 0
+		call Sleep
+		doneLbl:
 		ret
 	}
 }
@@ -357,8 +355,8 @@ void TweakMiscCriticalSections()
 	WriteRelCall(0x04538EC, (uintptr_t)hk_EnterCriticalSection);
 	SafeWrite8(0xA5B571, 0x90);
 	WriteRelCall(0xA5B572, (uintptr_t)hk_InitializeCriticalSectionhook);
-	SafeWrite16(0x040FC4C, 0x9090);
-	WriteRelCall(0x040FC4E, (uintptr_t)asm_EnterLCSHook);
+	//SafeWrite16(0x040FC4C, 0x9090);
+	WriteRelCall(0x040FC63, (uintptr_t)asm_EnterLCSHook);
 
 }
 
