@@ -306,11 +306,12 @@ void WINAPI hk_EnterCriticalSection_OLD(LPCRITICAL_SECTION cs)
 
 void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
 {
+	constexpr unsigned int minSpinBusy = 0x80;
 	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
-	if (spinCount > 100) return EnterCriticalSection(cs);
+	if (spinCount > minSpinBusy) return EnterCriticalSection(cs);
 	spinCount = 1500;
 	unsigned int i = 0;
-	while (i <= 0x80)
+	while (i <= minSpinBusy)
 	{
 		if (TryEnterCriticalSection(cs)) return;
 		_mm_pause();
