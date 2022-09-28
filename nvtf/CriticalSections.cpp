@@ -310,7 +310,7 @@ void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
 	if (spinCount > 100) return EnterCriticalSection(cs);
 	spinCount = 1500;
 	unsigned int i = 0;
-	while (i <= 100)
+	while (i <= 0x80)
 	{
 		if (TryEnterCriticalSection(cs)) return;
 		_mm_pause();
@@ -343,7 +343,7 @@ __declspec (naked) void asm_EnterLCSHook() {
 		spinLoop:
 		pause
 		inc ecx
-		cmp ecx, 0xA0
+		cmp ecx, 0x80
 		jbe spinLoop
 		cmp ecx, 0x2710
 		mov dword ptr [ebp-0x44], ecx
