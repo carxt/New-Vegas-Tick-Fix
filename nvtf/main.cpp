@@ -8,7 +8,7 @@
 
 HANDLE MyHandle;
 
-#define NVTF_VERSION 9
+#define NVTF_VERSION 10
 extern "C" {
 	BOOL WINAPI DllMain(
 		HANDLE  hDllHandle,
