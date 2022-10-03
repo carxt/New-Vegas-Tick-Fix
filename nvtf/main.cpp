@@ -101,6 +101,8 @@ extern "C" {
 		g_iNumBackBuffers = GetPrivateProfileInt("DirectX", "iNumBackBuffers", 2, iniDir);
 		g_bAlternateGTCFix = GetPrivateProfileInt("GTC", "bAlternateGTCFix", 0, iniDir);
 		g_bRemoveGTCLimits = GetPrivateProfileInt("GTC", "bRemoveGTCLimits", 0, iniDir);
+		g_bWaterLODPatch = GetPrivateProfileInt("Hacks", "bWaterLODPatch", 0, iniDir);
+
 		g_bUseExperimentalCacheForBuffers = 0; //GetPrivateProfileInt("DirectX", "bUseExperimentalCacheForBuffers", 0, iniDir);
 
 		//g_bUseDynamicBuffers = GetPrivateProfileInt("D3D9Ex", "bUseDynamicResources", 1, iniDir);

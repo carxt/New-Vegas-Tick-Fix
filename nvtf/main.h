@@ -34,7 +34,7 @@ int g_bAlternateGTCFix = 0;
 int g_bRemoveGTCLimits = 0;
 int g_bAutomaticFPSFix = 0;
 int g_bUseExperimentalCacheForBuffers = 0;
-
+int g_bWaterLODPatch = 0;
 
 
 
@@ -175,11 +175,13 @@ void __stdcall TimeGlobalHook(void* unused) {
 	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
 	{
 		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
-		if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
-		if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
-	//	if (*fMaxTime > ((DesiredMin / 1000))) *fMaxTime = ((DesiredMin / 1000));
+		if (g_bfMaxTime) {
+			*fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
+			if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
+			//	if (*fMaxTime > ((DesiredMin / 1000))) *fMaxTime = ((DesiredMin / 1000));
+		}
 	}
-
+	if (g_bfMaxTime && (*fMaxTime > fLowerMaxTimeBoundary / 1000)) *fMaxTime = fLowerMaxTimeBoundary / 1000; //clamp to fix, will do properly later
 }
 
 
@@ -198,9 +200,12 @@ void __stdcall TimeGlobalHook_NoSafeGuards(void* unused) {
 
 		//if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
 		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
-		if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
-		if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
+		if (g_bfMaxTime) {
+			*fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
+			if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
+		}
 	}
+	if (g_bfMaxTime && (*fMaxTime > fLowerMaxTimeBoundary / 1000)) *fMaxTime = fLowerMaxTimeBoundary / 1000; //clamp to fix, will do properly later
 
 }
 
@@ -317,7 +322,14 @@ void DoPatches()
 	if (g_bModifyDirectXBehavior)
 		D3DHooks::UseD3D9xPatchMemory(g_bUseDefaultPoolForTextures);
 
+	if (g_bWaterLODPatch) {
+		WriteRelCall((uintptr_t)0x6FD0D4, (uintptr_t)FakeFrustumHook);
+	}
+	//for (uintptr_t hookPtr : {0x045B1D4, 0x045B37F, 0x045B41B, 0x0045B4ED, 0x0045B69B, 0x045B7E0, 0x06FA772, 0x06FA7B5, 0x06FA7F8}) 
+/*	for (uintptr_t hookPtr : {0x06FA772, 0x06FA7B5, 0x06FA7F8}) {
+		//WriteRelCall((uintptr_t)hookPtr, (uintptr_t)hook_WaterCullCheck);
 
+	}*/
 }
 
 
