@@ -197,9 +197,7 @@ void __stdcall TimeGlobalHook_NoSafeGuards(void* unused) {
 	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
 	{
 		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
-
 		//if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
-		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
 		if (g_bfMaxTime) {
 			*fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
 			if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
