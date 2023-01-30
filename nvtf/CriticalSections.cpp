@@ -197,12 +197,12 @@ void TweakRefCountSafeGuard(int mode)
 	//takes out Renderer+0x180 CS calls
 	switch (mode){
 	case 1:
-		SafeWrite8(0xE6DC4B, 0x90);
-		WriteRelCall(0xE6DC4C, (uintptr_t)hk_EnterCriticalSectionRender);
-		SafeWrite8(0xE90B46, 0x90);
-		WriteRelCall(0xE90B47, (uintptr_t)hk_EnterCriticalSectionRender);
-		SafeWrite8(0xE90C91, 0x90);
-		WriteRelCall(0xE90C92, (uintptr_t)hk_EnterCriticalSectionRender);
+		SafeWrite16(0xE6DC4B, 0x9090);
+		WriteRelCall(0xE6DC4D, (uintptr_t)hk_EnterCriticalSectionRender);
+		SafeWrite16(0xE90B46, 0x9090);
+		WriteRelCall(0xE90B48, (uintptr_t)hk_EnterCriticalSectionRender);
+		SafeWrite16(0xE90C91, 0x9090);
+		WriteRelCall(0xE90C93, (uintptr_t)hk_EnterCriticalSectionRender);
 		break;
 	case 2:
 		SafeWriteBuf(0xE6DC4B, "\x90\x90\x90\x90\x90\x90\x90", 7);
