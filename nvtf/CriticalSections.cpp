@@ -173,11 +173,11 @@ void DoHeapCriticalSectionSpin()
 void WINAPI hk_EnterCriticalSectionRender(LPCRITICAL_SECTION cs)
 {
 	constexpr unsigned int minSpinSwitch = 0x80;
-	constexpr unsigned int minSpinYield = 0x200;
-	constexpr unsigned int spinAbort = 0x600;
+	constexpr unsigned int minSpinYield = 0x100;
+	constexpr unsigned int spinAbort = 0x200;
 	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
 	if (spinCount > spinAbort) return EnterCriticalSection(cs);
-	spinCount = 1500;
+	spinCount = 1200;
 	unsigned int i = 0;
 	while (i <= spinCount)
 	{
