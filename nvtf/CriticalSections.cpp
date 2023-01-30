@@ -177,7 +177,7 @@ void WINAPI hk_EnterCriticalSectionRender(LPCRITICAL_SECTION cs)
 	constexpr unsigned int spinAbort = 0x600;
 	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
 	if (spinCount > spinAbort) return EnterCriticalSection(cs);
-	spinCount = 1800;
+	spinCount = 1500;
 	unsigned int i = 0;
 	while (i <= spinCount)
 	{
@@ -197,12 +197,12 @@ void TweakRefCountSafeGuard(int mode)
 	//takes out Renderer+0x180 CS calls
 	switch (mode){
 	case 1:
-		SafeWrite16(0xE6DC4B, 0x9090);
+		SafeWrite16(0xE6DC4C, 0x90);
 		WriteRelCall(0xE6DC4D, (uintptr_t)hk_EnterCriticalSectionRender);
-		SafeWrite16(0xE90B46, 0x9090);
-		WriteRelCall(0xE90B48, (uintptr_t)hk_EnterCriticalSectionRender);
-		SafeWrite16(0xE90C91, 0x9090);
-		WriteRelCall(0xE90C93, (uintptr_t)hk_EnterCriticalSectionRender);
+		SafeWrite16(0xE90B46, 0x90);
+		WriteRelCall(0xE90B47, (uintptr_t)hk_EnterCriticalSectionRender);
+		SafeWrite16(0xE90C91, 0x90);
+		WriteRelCall(0xE90C92, (uintptr_t)hk_EnterCriticalSectionRender);
 		break;
 	case 2:
 		SafeWriteBuf(0xE6DC4B, "\x90\x90\x90\x90\x90\x90\x90", 7);
