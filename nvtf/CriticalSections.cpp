@@ -170,22 +170,57 @@ void DoHeapCriticalSectionSpin()
 }
 
 
-void RemoveRefCountSafeGuard()
+void WINAPI hk_EnterCriticalSectionRender(LPCRITICAL_SECTION cs)
 {
+	constexpr unsigned int minSpinSwitch = 0x80;
+	constexpr unsigned int minSpinYield = 0x200;
+	constexpr unsigned int spinAbort = 0x600;
+	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
+	if (spinCount > spinAbort) return EnterCriticalSection(cs);
+	spinCount = 1800;
+	unsigned int i = 0;
+	while (i <= spinCount)
+	{
+		if (TryEnterCriticalSection(cs)) return;
+		_mm_pause();
+		if (i > minSpinYield) { Sleep(0); }
+		else if (i > minSpinSwitch) { SwitchToThread(); }
+		i++;
+	}
+	return EnterCriticalSection(cs);
+}
 
+
+
+void TweakRefCountSafeGuard(int mode)
+{
 	//takes out Renderer+0x180 CS calls
+	switch (mode){
+	case 1:
+		SafeWrite8(0xE6DC4B, 0x90);
+		WriteRelCall(0xE6DC4C, (uintptr_t)hk_EnterCriticalSectionRender);
+		SafeWrite8(0xE90B46, 0x90);
+		WriteRelCall(0xE90B47, (uintptr_t)hk_EnterCriticalSectionRender);
+		SafeWrite8(0xE90C91, 0x90);
+		WriteRelCall(0xE90C92, (uintptr_t)hk_EnterCriticalSectionRender);
+		break;
+	case 2:
+		SafeWriteBuf(0xE6DC4B, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		SafeWriteBuf(0xE6DC69, "\x90\x90\x90\x90\x90\x90\x90", 7);
 
-	SafeWriteBuf(0xE6DC4B, "\x90\x90\x90\x90\x90\x90\x90", 7);
-	SafeWriteBuf(0xE6DC69, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		SafeWriteBuf(0xE90B45, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		SafeWriteBuf(0xE90B79, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		SafeWriteBuf(0xE90BAA, "\x90\x90\x90\x90\x90\x90\x90", 7);
 
-	SafeWriteBuf(0xE90B45, "\x90\x90\x90\x90\x90\x90\x90", 7);
-	SafeWriteBuf(0xE90B79, "\x90\x90\x90\x90\x90\x90\x90", 7);
-	SafeWriteBuf(0xE90BAA, "\x90\x90\x90\x90\x90\x90\x90", 7);
-
-
-	SafeWriteBuf(0xE90C90, "\x90\x90\x90\x90\x90\x90\x90", 7);
-	SafeWriteBuf(0xE90CBD, "\x90\x90\x90\x90\x90\x90\x90", 7);
-	SafeWriteBuf(0xE90CFC, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		SafeWriteBuf(0xE90C90, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		SafeWriteBuf(0xE90CBD, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		SafeWriteBuf(0xE90CFC, "\x90\x90\x90\x90\x90\x90\x90", 7);
+		break;
+	default:
+		break;
+	
+	}
+	
 
 
 }
@@ -260,21 +295,15 @@ __declspec(naked) void hk_call_E74247()
 
 }*/
 
-void RemoveRendererLockSafeGuard()
+void TweakRendererLockSafeGuard()
 {
-	//takes out lock called by both Renderer+0x80 AND Renderer+0x100
-	SafeWrite16(0xE7413E, 0x905F);
-	SafeWrite16(0xE7414B, 0x9058);
-	//exit
-	SafeWrite16(0xE744A0, 0x905A);
-	SafeWrite16(0xE744A3, 0x905F);
-
+	//Hopefully improves renderer perf
+	//aaaaaaa
+	SafeWrite16(0xE74126, 0xBE90);
+	SafeWrite32(0xE74128, (uintptr_t)hk_EnterCriticalSectionRender);
 
 
 }
-
-
-
 
 void WINAPI hk_EnterCriticalSection_OLD(LPCRITICAL_SECTION cs)
 {
