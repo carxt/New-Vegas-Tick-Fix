@@ -337,7 +337,7 @@ void WINAPI hk_EnterCriticalSection_OLD(LPCRITICAL_SECTION cs)
 
 void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
 {
-	constexpr unsigned int minSpinBusy = 0x80;
+	constexpr unsigned int minSpinBusy = 80;
 	unsigned int spinCount = cs->SpinCount & 0xFFFFFF;
 	if (spinCount > minSpinBusy) return EnterCriticalSection(cs);
 	spinCount = 1500;
@@ -364,14 +364,11 @@ BOOL WINAPI hk_InitializeCriticalSectionhook(LPCRITICAL_SECTION cs)
 
 
 
-__declspec (naked) void asm_EnterLCSHook() {
+__declspec (naked) void asm_IntrisicSleepHook() {
 	__asm {
-		cmp ecx, 0x80
 		pause
-		jbe doneLbl
-		push 0
+		push dword ptr ss:[ebp+0x4]
 		call Sleep
-		doneLbl:
 		ret
 	}
 }
@@ -382,7 +379,7 @@ void TweakMiscCriticalSections()
 	SafeWrite8(0xA5B571, 0x90);
 	WriteRelCall(0xA5B572, (uintptr_t)hk_InitializeCriticalSectionhook);
 	//SafeWrite16(0x040FC4C, 0x9090);
-	WriteRelCall(0x040FC63, (uintptr_t)asm_EnterLCSHook);
+	WriteRelCall(0x040FC63, (uintptr_t)asm_IntrisicSleepHook);
 
 }
 

@@ -315,7 +315,7 @@ void DoPatches()
 
 			DesiredMax = 1000 / double(g_iMaxFPS);
 			DesiredMin = 1000 / double(g_iMinFPS);
-			fLowerMaxTimeBoundary = (*fMaxTime) * 1000;
+			fLowerMaxTimeBoundary = (DesiredMin);
 			HookFPSStuff();
 		}
 	}
