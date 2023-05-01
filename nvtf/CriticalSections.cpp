@@ -382,7 +382,7 @@ BOOL WINAPI hk_InitializeCriticalSectionhook(LPCRITICAL_SECTION cs)
 __declspec (naked) void asm_IntrisicSleepHook() {
 	__asm {
 		pause
-		push dword ptr ss:[ebp+0x4]
+		push dword ptr ss:[esp+0x4]
 		call Sleep
 		ret
 	}
