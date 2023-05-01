@@ -62,6 +62,6 @@ void ReturnCSHook();
 
 void DoHeapCriticalSectionSpin();
 void TweakRefCountSafeGuard(int mode);
-void TweakRendererLockSafeGuard();
+void TweakRendererLockSafeGuard(int mode);
 void TweakMiscCriticalSections();
 void TurnProblematicCSIntoBusyLocks();

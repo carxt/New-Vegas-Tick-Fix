@@ -20,7 +20,7 @@ int g_iMinFPS = 1;
 int g_bfMaxTime;
 int g_bEnableThreadingTweaks = 0;
 int g_iTweakRCSafeGuard = 0;
-int g_bTweakMiscRendererSafeGuards = 0;
+int g_iTweakMiscRendererSafeGuards = 0;
 int g_bTweakMiscCriticalSections = 0;
 int g_bReplaceDeadlockCSWithWaitAndSleep = 0;
 int g_bSpiderHandsFix = 0;
@@ -276,7 +276,7 @@ void DoPatches()
 		if (g_bTweakMiscCriticalSections) TweakMiscCriticalSections();
 		//	SafeWriteBuf(0x8728D7, "\x8B\xE5\x5D\xC3\x90\x90", 6);
 		if (g_bReplaceDeadlockCSWithWaitAndSleep) TurnProblematicCSIntoBusyLocks();
-		if (g_bTweakMiscRendererSafeGuards) TweakRendererLockSafeGuard();
+		TweakRendererLockSafeGuard(g_iTweakMiscRendererSafeGuards);
 	}
 
 	//Fast Exit Hook
