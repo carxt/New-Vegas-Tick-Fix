@@ -151,7 +151,7 @@ void __fastcall hook_WaterCullCheck(
 NiFrustum fakeReturnedFrustum;
 NiFrustum* __fastcall FakeFrustumHook(NiCameraAlt* thisObj) {
 	fakeReturnedFrustum = thisObj->frustum;
-	float frustumValMax = 57.2899616308; // tan(89), so we go with the assumption no one is going to use stupid fov values
+	float frustumValMax = 3.27085261848; // tan(146/2 deg), so we go with the assumption no one is going to use stupid fov values
 	float frustumRatio = 1;
 	if ((fabs(fakeReturnedFrustum.r) > FLT_EPSILON) && (fabs(fakeReturnedFrustum.t) > FLT_EPSILON)) { //Juuuuuuuust in case
 		frustumRatio = fabs(fakeReturnedFrustum.r) / fabs(fakeReturnedFrustum.t);
