@@ -172,7 +172,7 @@ void ClampGameCounters() {
 		}
 	}
 	if (g_bfMaxTime) {
-		if (g_IsInPauseFade || *g_FPSGlobal < FLT_EPSILON) {
+		if (*g_IsInPauseFade || *g_FPSGlobal < FLT_EPSILON) {
 			*fMaxTime = fMaxTimeDefault;
 		}
 		else if ((*fMaxTime > fLowerMaxTimeBoundary / 1000)) *fMaxTime = fLowerMaxTimeBoundary / 1000;
