@@ -7,6 +7,7 @@ UINT32 OriginalFunction;
 float* fMaxTime = (float*)0x1267B38;
 bool initTimeHook = false;
 float fLowerMaxTimeBoundary = 0;
+float fMaxTimeDefault = 0;
 DWORD* InterfSingleton = (DWORD*)0x11D8A80;
 
 
@@ -131,8 +132,10 @@ inline UInt32 Calculaterel32(UInt32 Destination, UInt32 source)
 
 //volatile double Delta;
 bool* g_DialogMenu = (bool*)0X11D9514;
+bool* g_DialogMenu2 = (bool*)0x11DEA2C;
 bool* g_IsMenuMode = (bool*)0x11DEA2B;
-bool* g_DialogMenu2 = (bool*)0x11DEA2B;
+bool* g_IsInPauseFade = (bool*)0x11DEA2D;
+
 
 
 //uintptr_t OriginalDisplayCall;
@@ -156,8 +159,27 @@ uintptr_t __fastcall FPSLimt() {
 	return 0;
 }
 
-
 constexpr float fTimerOffsetMult = 0.9825; // I have no idea why this works but it does.
+void ClampGameCounters() {
+
+	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
+	{
+		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
+		if (g_bfMaxTime) {
+			*fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
+			if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
+			//	if (*fMaxTime > ((DesiredMin / 1000))) *fMaxTime = ((DesiredMin / 1000));
+		}
+	}
+	if (g_bfMaxTime) {
+		if (g_IsInPauseFade || *g_FPSGlobal < FLT_EPSILON) {
+			*fMaxTime = fMaxTimeDefault;
+		}
+		else if ((*fMaxTime > fLowerMaxTimeBoundary / 1000)) *fMaxTime = fLowerMaxTimeBoundary / 1000;
+	}
+
+}
+
 void __stdcall TimeGlobalHook(void* unused) {
 	//FPSLimt(nullptr);
 	double Delta = GetFPSCounterMiliSeconds_WRAP();
@@ -172,17 +194,7 @@ void __stdcall TimeGlobalHook(void* unused) {
 	{
 		*g_FPSGlobal = 0;
 	}
-
-	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
-	{
-		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
-		if (g_bfMaxTime) {
-			*fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
-			if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
-			//	if (*fMaxTime > ((DesiredMin / 1000))) *fMaxTime = ((DesiredMin / 1000));
-		}
-	}
-	if (g_bfMaxTime && (*fMaxTime > fLowerMaxTimeBoundary / 1000)) *fMaxTime = fLowerMaxTimeBoundary / 1000; //clamp to fix, will do properly later
+	ClampGameCounters();
 }
 
 
@@ -192,19 +204,8 @@ void __stdcall TimeGlobalHook_NoSafeGuards(void* unused) {
 
 	double Delta = GetFPSCounterMiliSeconds_WRAP();
 	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < fLowerMaxTimeBoundary) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : fLowerMaxTimeBoundary / 1000);
-
 	*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
-
-	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
-	{
-		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
-		//if (g_bfMaxTime) *fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
-		if (g_bfMaxTime) {
-			*fMaxTime = 1000 / ((1000 / *fMaxTime) * fTimerOffsetMult);
-			if (*fMaxTime < FLT_EPSILON) *fMaxTime = FLT_EPSILON;
-		}
-	}
-	if (g_bfMaxTime && (*fMaxTime > fLowerMaxTimeBoundary / 1000)) *fMaxTime = fLowerMaxTimeBoundary / 1000; //clamp to fix, will do properly later
+	ClampGameCounters();
 
 }
 
@@ -316,6 +317,7 @@ void DoPatches()
 			DesiredMax = 1000 / double(g_iMaxFPS);
 			DesiredMin = 1000 / double(g_iMinFPS);
 			fLowerMaxTimeBoundary = (DesiredMin);
+			fMaxTimeDefault = *fMaxTime;
 			HookFPSStuff();
 		}
 	}
