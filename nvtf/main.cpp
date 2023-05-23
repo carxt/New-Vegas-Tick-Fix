@@ -106,7 +106,9 @@ extern "C" {
 		g_bWaterLODPatch = GetPrivateProfileInt("Hacks", "bWaterLODPatch", 0, iniDir);
 
 		g_bUseExperimentalCacheForBuffers = 0; //GetPrivateProfileInt("DirectX", "bUseExperimentalCacheForBuffers", 0, iniDir);
-
+		char floatbuffer[0x40];
+		GetPrivateProfileString("FPSFix", "fMaxTimeLowerBoundary", "0.016", floatbuffer, 0x3F, iniDir);
+		g_fMaxTimeLowerBoundary = atof(floatbuffer);
 		//g_bUseDynamicBuffers = GetPrivateProfileInt("D3D9Ex", "bUseDynamicResources", 1, iniDir);
 		//g_bUseFlipExSwapMode = GetPrivateProfileInt("D3D9Ex", "bUseFlipExSwapMode", 0, iniDir);
 		//g_bForceD3D9Ex = GetPrivateProfileInt("DirectX", "bUseD3D9Ex", 0, iniDir);

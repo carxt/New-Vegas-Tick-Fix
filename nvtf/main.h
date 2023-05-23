@@ -25,10 +25,10 @@ int g_iTweakMiscRendererSafeGuards = 0;
 int g_bTweakMiscCriticalSections = 0;
 int g_bReplaceDeadlockCSWithWaitAndSleep = 0;
 int g_bSpiderHandsFix = 0;
-double	DesiredMax = 1;
-double	DesiredMin = 1000;
-double	HavokMax = 1;
-double	HavokMin = 1;
+double	fDesiredMax = 1;
+double	fDesiredMin = 1000;
+double	fHavokMax = 1;
+double	fHavokMin = 1;
 int g_bModifyDirectXBehavior = 1;
 int g_bRedoHashtables = 0;
 int g_bResizeHashtables = 1;
@@ -38,7 +38,7 @@ int g_bAutomaticFPSFix = 0;
 int g_bUseExperimentalCacheForBuffers = 0;
 int g_bWaterLODPatch = 0;
 
-
+double g_fMaxTimeLowerBoundary = 0;
 
 
 
@@ -175,7 +175,7 @@ void ClampGameCounters() {
 		if (*g_IsInPauseFade || *g_FPSGlobal < FLT_EPSILON) {
 			*fMaxTime = fMaxTimeDefault;
 		}
-		else if ((*fMaxTime > fLowerMaxTimeBoundary / 1000)) *fMaxTime = fLowerMaxTimeBoundary / 1000;
+		else if ((*fMaxTime > fLowerMaxTimeBoundary)) *fMaxTime = fLowerMaxTimeBoundary;
 	}
 
 }
@@ -184,11 +184,11 @@ void __stdcall TimeGlobalHook(void* unused) {
 	//FPSLimt(nullptr);
 	double Delta = GetFPSCounterMiliSeconds_WRAP();
 	//FPSLimitClock = std::chrono::steady_clock::now();
-	if (g_bfMaxTime)*fMaxTime = (Delta > FLT_EPSILON) ? ((Delta < DesiredMin) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : DesiredMin / 1000) : fLowerMaxTimeBoundary / 1000 ;
+	if (g_bfMaxTime)*fMaxTime = (Delta > FLT_EPSILON) ? ((Delta < fDesiredMin) ? (Delta > fDesiredMax ? Delta / 1000 : fDesiredMax / 1000) : fDesiredMin / 1000) : fLowerMaxTimeBoundary ;
 
 	if (!*g_IsMenuMode || !(!*g_DialogMenu2 && !*g_DialogMenu))
 	{
-		*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
+		*g_FPSGlobal = (Delta > 0) ? ((Delta < fDesiredMin) ? ((Delta > fDesiredMax) ? Delta : fDesiredMax) : fDesiredMin) : 0;
 	}
 	else
 	{
@@ -203,8 +203,8 @@ void __stdcall TimeGlobalHook(void* unused) {
 void __stdcall TimeGlobalHook_NoSafeGuards(void* unused) {
 
 	double Delta = GetFPSCounterMiliSeconds_WRAP();
-	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < fLowerMaxTimeBoundary) ? (Delta > DesiredMax ? Delta / 1000 : DesiredMax / 1000) : fLowerMaxTimeBoundary / 1000);
-	*g_FPSGlobal = (Delta > 0) ? ((Delta < DesiredMin) ? ((Delta > DesiredMax) ? Delta : DesiredMax) : DesiredMin) : 0;
+	if (g_bfMaxTime)*fMaxTime = ((Delta > 0 && Delta < fLowerMaxTimeBoundary * 1000) ? (Delta > fDesiredMax ? Delta / 1000 : fDesiredMax / 1000) : fLowerMaxTimeBoundary);
+	*g_FPSGlobal = (Delta > 0) ? ((Delta < fDesiredMin) ? ((Delta > fDesiredMax) ? Delta : fDesiredMax) : fDesiredMin) : 0;
 	ClampGameCounters();
 
 }
@@ -314,10 +314,10 @@ void DoPatches()
 		{
 			PrintLog("FPSFIX ENABLED");
 
-			DesiredMax = 1000 / double(g_iMaxFPS);
-			DesiredMin = 1000 / double(g_iMinFPS);
-			fLowerMaxTimeBoundary = (DesiredMin);
+			fDesiredMax = 1000 / double(g_iMaxFPS);
+			fDesiredMin = 1000 / double(g_iMinFPS);
 			fMaxTimeDefault = *fMaxTime;
+			fLowerMaxTimeBoundary = g_fMaxTimeLowerBoundary;
 			HookFPSStuff();
 		}
 	}
