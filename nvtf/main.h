@@ -8,7 +8,8 @@ float* fMaxTime = (float*)0x1267B38;
 bool initTimeHook = false;
 float fLowerMaxTimeBoundary = 0;
 float fMaxTimeDefault = 0;
-DWORD* InterfSingleton = (DWORD*)0x11D8A80;
+DWORD** InterfSingleton = (DWORD**)0x11D8A80;
+DWORD** BGSLoadGameSingleton = (DWORD**)0x11DDF38;
 
 
 int g_bGTCFix = 0;
@@ -133,9 +134,9 @@ inline UInt32 Calculaterel32(UInt32 Destination, UInt32 source)
 //volatile double Delta;
 bool* g_DialogMenu = (bool*)0X11D9514;
 bool* g_DialogMenu2 = (bool*)0x11DEA2C;
-bool* g_IsMenuMode = (bool*)0x11DEA2B;
-bool* g_IsInPauseFade = (bool*)0x11DEA2D;
-
+bool* g_bIsMenuMode = (bool*)0x11DEA2B;
+bool* g_bIsInPauseFade = (bool*)0x11DEA2D;
+bool* g_bIsLoadingNewGame = (bool*)0x11D8907;
 
 
 //uintptr_t OriginalDisplayCall;
@@ -172,7 +173,7 @@ void ClampGameCounters() {
 		}
 	}
 	if (g_bfMaxTime) {
-		if (*g_IsInPauseFade || *g_FPSGlobal < FLT_EPSILON) {
+		if (*g_bIsInPauseFade || *g_FPSGlobal < FLT_EPSILON) {
 			*fMaxTime = fMaxTimeDefault;
 		}
 		else if ((*fMaxTime > fLowerMaxTimeBoundary)) *fMaxTime = fLowerMaxTimeBoundary;
@@ -186,13 +187,15 @@ void __stdcall TimeGlobalHook(void* unused) {
 	//FPSLimitClock = std::chrono::steady_clock::now();
 	if (g_bfMaxTime)*fMaxTime = (Delta > FLT_EPSILON) ? ((Delta < fDesiredMin) ? (Delta > fDesiredMax ? Delta / 1000 : fDesiredMax / 1000) : fDesiredMin / 1000) : fLowerMaxTimeBoundary ;
 
-	if (!*g_IsMenuMode || !(!*g_DialogMenu2 && !*g_DialogMenu))
+	if ((*BGSLoadGameSingleton && ThisStdCall<bool>((uintptr_t)0x042CE10, *BGSLoadGameSingleton)) || *g_bIsLoadingNewGame)
 	{
-		*g_FPSGlobal = (Delta > 0) ? ((Delta < fDesiredMin) ? ((Delta > fDesiredMax) ? Delta : fDesiredMax) : fDesiredMin) : 0;
+		*g_FPSGlobal = 0;
+
 	}
 	else
 	{
-		*g_FPSGlobal = 0;
+		*g_FPSGlobal = (Delta > 0) ? ((Delta < fDesiredMin) ? ((Delta > fDesiredMax) ? Delta : fDesiredMax) : fDesiredMin) : 0;
+
 	}
 	ClampGameCounters();
 }
