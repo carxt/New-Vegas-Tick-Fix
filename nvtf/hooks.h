@@ -163,3 +163,79 @@ NiFrustum* __fastcall FakeFrustumHook(NiCameraAlt* thisObj) {
 	return &fakeReturnedFrustum;
 
 }
+
+
+
+
+
+
+bool IsInBSA(const char* fileName, int mode) {
+	char dirHash[0x8] = {}, fileHash[0x8] = {};
+	CdeclCall<void*>(0xAFD270, fileName, dirHash, fileHash);
+	auto res = CdeclCall<void*>(0xAF6540, mode, dirHash, fileHash, fileName);
+	return (res != NULL);
+}
+
+int GameFileExistsBSAOrLoose(const char* fileName, int mode) {
+	PrintLog("string : %s", (fileName + 5));
+	if (IsInBSA(fileName + 5, mode)) {// this WILL crash with a filepath that is less than 6 chars long
+		return 1; 
+	}
+	DWORD dwAttrib = GetFileAttributes(fileName);
+	if (dwAttrib != INVALID_FILE_ATTRIBUTES &&
+		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)) {
+		return 2;
+	}
+	return 0;
+}
+int GameFileExistsBSAOrLooseSafe(const char* fileName, int mode) {
+	if (strlen(fileName) < 5) {
+		return 0;
+	}
+	return GameFileExistsBSAOrLoose(fileName, mode);
+}
+
+
+bool __fastcall TESNPCGetHasFaceGen(void* thisNPC) {
+	char buffer[MAX_PATH];
+	if (ThisStdCall<bool>(0x0604310, thisNPC, 0 ,buffer, sizeof(buffer))) {
+		if (GameFileExistsBSAOrLoose(buffer, 1)) {
+			return true;
+		}
+
+	}
+
+}
+
+
+__declspec(naked) void asmCheckFaceGenHook() {
+	__asm {
+		movzx eax, byte ptr[eax]
+		test eax, eax
+		cmovz eax, dword ptr [ebp+0x18]
+		test eax, eax
+		ret
+	}
+}
+
+
+__declspec(naked) bool __cdecl asmEGTFaceGenCallHook() {
+	__asm {
+		mov ecx, dword ptr [ebp+0x10]
+		call TESNPCGetHasFaceGen
+		movzx eax, al
+		push eax
+		push dword ptr[esp + 0x10]
+		push dword ptr[esp + 0x10]
+		push dword ptr[esp + 0x10]
+		push dword ptr[esp + 0x10]
+		add esp, 0x14
+		ret
+	}
+}
+
+
+void HookFaceGenEGT() {
+	WriteRelCall(0x06549EA, (uintptr_t)asmCheckFaceGenHook);
+	WriteRelCall(0x0613F06, (uintptr_t)asmEGTFaceGenCallHook);
+}

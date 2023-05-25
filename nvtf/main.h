@@ -161,8 +161,11 @@ uintptr_t __fastcall FPSLimt() {
 }
 
 constexpr float fTimerOffsetMult = 0.9825; // I have no idea why this works but it does.
-void ClampGameCounters() {
 
+
+
+
+void ClampGameCounters() {
 	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
 	{
 		*g_FPSGlobal = 1000 / ((1000 / *g_FPSGlobal) * fTimerOffsetMult);
@@ -186,7 +189,6 @@ void __stdcall TimeGlobalHook(void* unused) {
 	double Delta = GetFPSCounterMiliSeconds_WRAP();
 	//FPSLimitClock = std::chrono::steady_clock::now();
 	if (g_bfMaxTime)*fMaxTime = (Delta > FLT_EPSILON) ? ((Delta < fDesiredMin) ? (Delta > fDesiredMax ? Delta / 1000 : fDesiredMax / 1000) : fDesiredMin / 1000) : fLowerMaxTimeBoundary ;
-
 	if ((*BGSLoadGameSingleton && ThisStdCall<bool>((uintptr_t)0x042CE10, *BGSLoadGameSingleton)) || *g_bIsLoadingNewGame)
 	{
 		*g_FPSGlobal = 0;
@@ -270,6 +272,7 @@ void __stdcall SleepHook(DWORD dwMiliseconds) {
 
 void DoPatches()
 {
+	HookFaceGenEGT();
 	if (g_bAllowDirectXDebugging)
 	{//SafeWriteBuf(0x4DAD61, "\x90\x90\x90\x90\x90\x90\x90", 7);
 		SafeWriteBuf(0x09F9968, "\xC2\x04\x00\xCC\xCC\xCC", 6);
