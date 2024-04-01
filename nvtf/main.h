@@ -160,7 +160,7 @@ uintptr_t __fastcall FPSLimt() {
 	return 0;
 }
 
-constexpr float fTimerOffsetMult = 0.9825; // I have no idea why this works but it does.
+constexpr float fTimerOffsetMult = 0.9875; // Formerly 0.9825
 void ClampGameCounters() {
 
 	if (g_bSpiderHandsFix > 0 && *g_FPSGlobal > FLT_EPSILON)
@@ -280,7 +280,7 @@ void DoPatches()
 		if (g_bTweakMiscCriticalSections) TweakMiscCriticalSections();
 		//	SafeWriteBuf(0x8728D7, "\x8B\xE5\x5D\xC3\x90\x90", 6);
 		if (g_bReplaceDeadlockCSWithWaitAndSleep) TurnProblematicCSIntoBusyLocks();
-		TweakRendererLockSafeGuard(g_iTweakMiscRendererSafeGuards);
+		TweakRendererLockSafeGuard(g_iTweakMiscRendererSafeGuards);		
 	}
 
 	//Fast Exit Hook
@@ -317,8 +317,8 @@ void DoPatches()
 		{
 			PrintLog("FPSFIX ENABLED");
 
-			fDesiredMax = 1000 / double(g_iMaxFPS);
-			fDesiredMin = 1000 / double(g_iMinFPS);
+			fDesiredMax = 1000.0 / double(g_iMaxFPS);
+			fDesiredMin = 1000.0 / double(g_iMinFPS);
 			fMaxTimeDefault = *fMaxTime;
 			fLowerMaxTimeBoundary = g_fMaxTimeLowerBoundary;
 			HookFPSStuff();

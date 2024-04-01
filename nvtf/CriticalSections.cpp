@@ -395,6 +395,8 @@ void TweakMiscCriticalSections()
 	WriteRelCall(0xA5B572, (uintptr_t)hk_InitializeCriticalSectionhook);
 	//SafeWrite16(0x040FC4C, 0x9090);
 	WriteRelCall(0x040FC63, (uintptr_t)asm_IntrisicSleepHook);
+	WriteRelCall(0x040FC57, (uintptr_t)asm_IntrisicSleepHook);
+
 
 }
 
@@ -426,3 +428,18 @@ void TurnProblematicCSIntoBusyLocks() {
 }
 
 
+
+DWORD __fastcall hk_BSPalette_GetTextureFromEntry(void* ptr_This, uintptr_t ptr_unused, void* ptr_texSet, void* ptr_niRef) {
+	BGSLightCriticalSection* cs_TexPalette = (BGSLightCriticalSection*)(0x11F4480);
+	EnterLightCriticalSectionWrapper(cs_TexPalette);
+	auto res = ((DWORD(__thiscall*)(void*, void*, void*))(0x43C4F0))(ptr_This, ptr_texSet, ptr_niRef);
+	LeaveLightCriticalSectionWrapper(cs_TexPalette);
+	return res;
+}
+
+
+
+void AddSpinLockToPaletteRetriever() {
+	WriteRelCall(0x043C4DB, (uintptr_t) hk_BSPalette_GetTextureFromEntry);
+
+}
