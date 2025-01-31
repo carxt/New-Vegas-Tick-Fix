@@ -13,8 +13,6 @@ DWORD** BGSLoadGameSingleton = (DWORD**)0x11DDF38;
 
 
 int g_bGTCFix = 0;
-int g_bAllowDirectXDebugging = 0;
-int g_bAllowBrightnessChangeWindowed = 0;
 int g_bFastExit = 0;
 int g_bFPSFix = 0;
 int g_iMaxFPS = 1;
@@ -73,22 +71,9 @@ enum StartMenuFlags
 };
 
 static uintptr_t* GetStartMenuSingleton() { return *(uintptr_t**)0x11DAAC0; };
-void ResetBrightness()
-{
-	if (foreWindow && D3DHooks::SetGammaRampInit)
-	{
-		HDC Devic = ::GetDC(foreWindow);
-		SetDeviceGammaRamp(Devic, &D3DHooks::StartingGammaRamp);
-		::ReleaseDC(foreWindow, Devic);
-	}
-}
+
 void FastExit()
 {
-	ResetBrightness();
-	/*for (auto it = MapLogger.begin(); it != MapLogger.end(); ++it)
-	{
-		_MESSAGE("Address 0x%X called %i times", it->first, it->second);
-	}*/
 	if (UInt32 start = (UInt32)GetStartMenuSingleton())
 	{
 		if (*(UInt32*)(start + 0x1A8) & StartMenuFlags::kHasChangedSettings)
@@ -98,15 +83,6 @@ void FastExit()
 	}
 	TerminateProcess(GetCurrentProcess(), 0);
 }
-
-int __fastcall hk_OSGlobalsExit(void* thisObj)
-{
-	ResetBrightness();
-	return ThisStdCall<int>(0x5B6CB0, thisObj);
-}
-
-
-
 
 
 
@@ -270,10 +246,6 @@ void __stdcall SleepHook(DWORD dwMiliseconds) {
 
 void DoPatches()
 {
-	if (g_bAllowDirectXDebugging)
-	{//SafeWriteBuf(0x4DAD61, "\x90\x90\x90\x90\x90\x90\x90", 7);
-		SafeWriteBuf(0x09F9968, "\xC2\x04\x00\xCC\xCC\xCC", 6);
-	}
 	if (g_bEnableThreadingTweaks) {
 		TweakRefCountSafeGuard(g_iTweakRCSafeGuard);
 		//if (g_bRemoveRendererLockSafeGuard) RemoveRendererLockSafeGuard();
@@ -287,20 +259,11 @@ void DoPatches()
 	if (g_bFastExit) {
 		WriteRelJump(0x86B66E, (UInt32)FastExit);
 	}
+
 	if (g_bRedoHashtables) {
 		DoHashTableStuff();
-
 	}
 
-	if (g_bAllowBrightnessChangeWindowed)
-	{
-		WriteRelCall(0x4DD119, (uintptr_t)(D3DHooks::hk_SetGammaRamp));
-		for (UInt32 patchAddr : {0x5B6CA6, 0x7D0C3E, 0x86A38B})
-		{
-			WriteRelCall(patchAddr, (UInt32)hk_OSGlobalsExit);
-
-		}
-	}
 	if (g_bGTCFix) {
 		PrintLog("TGT ENABLED");
 		//timeBeginPeriod(1);
@@ -324,8 +287,9 @@ void DoPatches()
 			HookFPSStuff();
 		}
 	}
+
 	if (g_bModifyDirectXBehavior)
-		D3DHooks::UseD3D9xPatchMemory(g_bUseDefaultPoolForTextures);
+		D3DHooks::Init();
 
 	if (g_bWaterLODPatch) {
 		WriteRelCall((uintptr_t)0x6FD0D4, (uintptr_t)FakeFrustumHook);

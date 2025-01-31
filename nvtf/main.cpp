@@ -73,13 +73,11 @@ extern "C" {
 		GetModuleFileNameA(GetModuleHandle(NULL), iniDir, MAX_PATH);
 		strcpy((char*)(strrchr(iniDir, '\\') + 1), "Data\\NVSE\\Plugins\\NVTF.ini");
 		g_bGTCFix = GetPrivateProfileInt("Main", "bGTCFix", 0, iniDir);
-		g_bAllowBrightnessChangeWindowed = GetPrivateProfileInt("Main", "bAllowBrightnessChangeWindowed", 0, iniDir);
 		g_bFastExit = GetPrivateProfileInt("Main", "bFastExit", 1, iniDir);
 		g_bEnableThreadingTweaks = GetPrivateProfileInt("Main", "bEnableThreadingTweaks", 0, iniDir);
 		g_bModifyDirectXBehavior = GetPrivateProfileInt("Main", "bModifyDirectXBehavior", 0, iniDir);
 		g_bRedoHashtables = GetPrivateProfileInt("Main", "bRedoHashtables", 0, iniDir);
-		g_bAllowDirectXDebugging = GetPrivateProfileInt("Main", "bAllowDirectXDebugging", 0, iniDir);
-		if (g_bGTCFix <= 0 && g_bFastExit <= 0 && g_bEnableThreadingTweaks <= 0 && g_bModifyDirectXBehavior <= 0 && g_bAllowBrightnessChangeWindowed <= 0 && g_bRedoHashtables <= 0 && g_bAllowDirectXDebugging <= 0) return false;
+		if (g_bGTCFix <= 0 && g_bFastExit <= 0 && g_bEnableThreadingTweaks <= 0 && g_bModifyDirectXBehavior <= 0 && g_bRedoHashtables <= 0) return false;
 		PrintLog("LS : 2");
 		g_iSpinCount = 0;// GetPrivateProfileInt("CS", "iSpinCount", -1, iniDir);
 		g_bFPSFix = GetPrivateProfileInt("GTC", "bFPSFix", 0, iniDir);
@@ -96,11 +94,11 @@ extern "C" {
 		g_bReplaceDeadlockCSWithWaitAndSleep = GetPrivateProfileInt("ThreadingTweaks", "bReplaceDeadlockCSWithWaitAndSleep", 0, iniDir);
 
 		g_bSpiderHandsFix = GetPrivateProfileInt("FPSFix", "bSpiderHandsFix", 0, iniDir);
+
 		g_bToggleTripleBuffering = GetPrivateProfileInt("DirectX", "bToggleTripleBuffering", 0, iniDir);
-		g_bForceD3D9Ex = 0; // GetPrivateProfileInt("DirectX", "bUseD3D9Ex", 0, iniDir);
-		g_bD3D9ManageResources = GetPrivateProfileInt("DirectX", "bD3D9ManageResources", 0, iniDir);
 		g_bUseDefaultPoolForTextures = GetPrivateProfileInt("DirectX", "bUseDefaultPoolForTextures", 0, iniDir);
-		g_iNumBackBuffers = GetPrivateProfileInt("DirectX", "iNumBackBuffers", 2, iniDir);
+		g_bAllowDirectXDebugging = GetPrivateProfileInt("DirectX", "bAllowDirectXDebugging", 0, iniDir);
+
 		g_bAlternateGTCFix = GetPrivateProfileInt("GTC", "bAlternateGTCFix", 0, iniDir);
 		g_bRemoveGTCLimits = GetPrivateProfileInt("GTC", "bRemoveGTCLimits", 0, iniDir);
 		g_bWaterLODPatch = GetPrivateProfileInt("Hacks", "bWaterLODPatch", 0, iniDir);
