@@ -1,5 +1,4 @@
 
-#include <string>
 #include "nvse/prefix.h"
 #include "nvse/PluginAPI.h"
 #include "internal/utility.h"
@@ -79,7 +78,6 @@ extern "C" {
 		g_bRedoHashtables = GetPrivateProfileInt("Main", "bRedoHashtables", 0, iniDir);
 		if (g_bGTCFix <= 0 && g_bFastExit <= 0 && g_bEnableThreadingTweaks <= 0 && g_bModifyDirectXBehavior <= 0 && g_bRedoHashtables <= 0) return false;
 		PrintLog("LS : 2");
-		g_iSpinCount = 0;// GetPrivateProfileInt("CS", "iSpinCount", -1, iniDir);
 		g_bFPSFix = GetPrivateProfileInt("GTC", "bFPSFix", 0, iniDir);
 		g_bAutomaticFPSFix = 0;
 		g_iMaxFPS = GetPrivateProfileInt("FPSFix", "iMaxFPSTolerance", 59, iniDir);
@@ -101,26 +99,11 @@ extern "C" {
 
 		g_bAlternateGTCFix = GetPrivateProfileInt("GTC", "bAlternateGTCFix", 0, iniDir);
 		g_bRemoveGTCLimits = GetPrivateProfileInt("GTC", "bRemoveGTCLimits", 0, iniDir);
-		g_bWaterLODPatch = GetPrivateProfileInt("Hacks", "bWaterLODPatch", 0, iniDir);
 
-		g_bUseExperimentalCacheForBuffers = 0; //GetPrivateProfileInt("DirectX", "bUseExperimentalCacheForBuffers", 0, iniDir);
 		char floatbuffer[0x40];
 		GetPrivateProfileString("FPSFix", "fMaxTimeLowerBoundary", "0.016", floatbuffer, 0x3F, iniDir);
 		g_fMaxTimeLowerBoundary = atof(floatbuffer);
-		//g_bUseDynamicBuffers = GetPrivateProfileInt("D3D9Ex", "bUseDynamicResources", 1, iniDir);
-		//g_bUseFlipExSwapMode = GetPrivateProfileInt("D3D9Ex", "bUseFlipExSwapMode", 0, iniDir);
-		//g_bForceD3D9Ex = GetPrivateProfileInt("DirectX", "bUseD3D9Ex", 0, iniDir);
 
-		//Feel like adding this one ngl
-		/*if (!FileExists(iniDir))
-		{
-			
-			CloseHandle(CreateFile(iniDir, GENERIC_WRITE, 0, NULL,
-				CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));
-			MessageBox(NULL, "You have downloaded NVTF.\nThis message confirms it works.\nBe sure of checking the ini in detail.", "Read the INI", MB_ICONASTERISK);
-			MessageBox(NULL, iniDir, "Read the INI", MB_ICONASTERISK);
-
-		}*/
 		DoPatches();
 		return true;
 	}

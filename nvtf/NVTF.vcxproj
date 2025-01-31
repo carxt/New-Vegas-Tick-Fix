@@ -121,7 +121,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\nvse;$(SolutionDir)\..\nvse\nvse;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;NVSE_PLUGIN_EXAMPLE_EXPORTS;RUNTIME_VERSION=0x040020D0;RUNTIME;_CRT_NO_VA_START_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -144,6 +144,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
       <TargetMachine>MachineX86</TargetMachine>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
@@ -208,8 +209,6 @@
     <ClCompile Include="CriticalSections.cpp" />
     <ClCompile Include="direct3dhooks.cpp" />
     <ClCompile Include="FPSTimer.cpp" />
-    <ClCompile Include="internal\md5\md5.cpp" />
-    <ClCompile Include="internal\sha1\sha1.cpp" />
     <ClCompile Include="internal\utility.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -223,9 +222,6 @@
     <ClInclude Include="direct3dhooks.h" />
     <ClInclude Include="FPSTimer.h" />
     <ClInclude Include="hooks.h" />
-    <ClInclude Include="internal\containers.h" />
-    <ClInclude Include="internal\md5\md5.h" />
-    <ClInclude Include="internal\sha1\sha1.h" />
     <ClInclude Include="internal\utility.h" />
     <ClInclude Include="main.h" />
   </ItemGroup>

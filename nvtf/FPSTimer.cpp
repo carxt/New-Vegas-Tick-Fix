@@ -1,6 +1,10 @@
 #pragma once
 
 #include "FPSTimer.h"
+#include "chrono"
+
+#pragma comment(lib, "winmm.lib")
+
 namespace QPC {
 	double FPSTimerFrequency = 0;
 	double lastCount = 0;
@@ -21,6 +25,7 @@ namespace QPC {
 
 	}
 }
+
 namespace tGt 
 {
 	double lastCount = 0;
@@ -55,11 +60,6 @@ void FPSStartCounter()
 
 }
 
-
-
-
-
-
 double GetFPSCounterMiliSeconds_WRAP(bool doUpdate)
 {
 	if (doUpdate)
@@ -80,9 +80,6 @@ double GetFPSCounterMiliSeconds_WRAP(bool doUpdate)
 	}
 
 }
-
-
-
 
 DWORD ReturnCounter_WRAP()
 {
