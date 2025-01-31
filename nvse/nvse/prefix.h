@@ -12,9 +12,11 @@
 
 // win7 and above
 #define _WIN32_WINNT	0x0601
+#define WIN32_LEAN_AND_MEAN
 
 #include <map>
 #include <Windows.h>
+#include "timeapi.h"
 #include "nvse/nvse_version.h"
 
 typedef unsigned char		UInt8;		//!< An unsigned 8-bit integer value
