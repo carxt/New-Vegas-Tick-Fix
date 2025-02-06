@@ -102,6 +102,12 @@ void WINAPI hk_EnterCriticalSection(LPCRITICAL_SECTION cs)
 	return EnterCriticalSection(cs);
 }
 
+BOOL WINAPI hk_InitializeCriticalSectionhook(LPCRITICAL_SECTION cs)
+{
+	return InitializeCriticalSectionEx(cs, 2400, RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO);
+	cs->SpinCount &= ~(RTL_CRITICAL_SECTION_ALL_FLAG_BITS) | RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO;
+}
+
 void IntrinsicSleepHook(DWORD dwMilliseconds) {
 	_mm_pause();
 	Sleep(dwMilliseconds);
@@ -109,6 +115,11 @@ void IntrinsicSleepHook(DWORD dwMilliseconds) {
 
 void TweakMiscCriticalSections()
 {
+	// Replaces NiGlobalStringTable's critical section creation
+	// Works only if JIP is not installed, as JIP replaces NiGlobalStringTable with its own implementation
+	SafeWrite8(0xA5B571, 0x90);
+	WriteRelCall(0xA5B572, (uintptr_t)hk_InitializeCriticalSectionhook);
+
 	// Replaces NiCriticalSection::Enter
 	SafeWrite8(0x04538EB, 0x90);
 	WriteRelCall(0x04538EC, (uintptr_t)hk_EnterCriticalSection);
