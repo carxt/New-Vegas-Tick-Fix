@@ -1,11 +1,9 @@
 
 #include "nvse/prefix.h"
 #include "nvse/PluginAPI.h"
-#include "internal/utility.h"
 #include "nvse/Utilities.h"
+#include <math.h>
 #include "main.h"
-
-HANDLE MyHandle;
 
 #define NVTF_VERSION 10
 extern "C" {
@@ -15,11 +13,6 @@ extern "C" {
 		LPVOID  lpreserved
 	)
 	{
-		switch (dwReason) {
-		case DLL_PROCESS_ATTACH:
-			MyHandle = hDllHandle;
-			break;
-		}
 		return TRUE;
 	}
 
@@ -28,47 +21,22 @@ extern "C" {
 		info->name = "NVTF";
 		info->version = NVTF_VERSION;
 		info->infoVersion = PluginInfo::kInfoVersion;
-		gLog.Create("NVTF.log");
+
 		// version checks
 		if (nvse->nvseVersion < NVSE_VERSION_INTEGER)
 		{
-			PrintLog("ERROR: NVSE version too old (got %08X expected at least %08X)", nvse->nvseVersion, NVSE_VERSION_INTEGER);
+			char text[72];
+			sprintf_s(text, "NVSE version too old (got %08X expected at least %08X)", nvse->nvseVersion, NVSE_VERSION_INTEGER);
+			MessageBoxA(NULL, text, "NVTF", MB_OK);
 			return false;
 		}
-
-		if (!nvse->isEditor)
-		{
-			if (nvse->runtimeVersion < RUNTIME_VERSION_1_4_0_525)
-			{
-				PrintLog("ERROR: incorrect runtime version (got %08X need at least %08X)", nvse->runtimeVersion, RUNTIME_VERSION_1_4_0_525);
-				return false;
-			}
-
-			if (nvse->isNogore)
-			{
-				PrintLog("ERROR: incorrect runtime edition (got %08X need %08X (standard))", nvse->isNogore, 0);
-				return false;
-			}
-		}
-		else return false;
 
 		return true;
 	}
 
-
-
-
-	//think it's done
-	//i guess
-
-
 	bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	{
-		//DoAprilFoolsStuff(nvse);
-		PrintLog("Base Address %lx", (UInt32)MyHandle);
-		PrintLog("NVTF Version: %u", NVTF_VERSION);
 		char iniDir[MAX_PATH];
-		PrintLog("LS : 1");
 		GetModuleFileNameA(GetModuleHandle(NULL), iniDir, MAX_PATH);
 		strcpy((char*)(strrchr(iniDir, '\\') + 1), "Data\\NVSE\\Plugins\\NVTF.ini");
 		g_bGTCFix = GetPrivateProfileInt("Main", "bGTCFix", 0, iniDir);
@@ -76,17 +44,30 @@ extern "C" {
 		g_bEnableThreadingTweaks = GetPrivateProfileInt("Main", "bEnableThreadingTweaks", 0, iniDir);
 		g_bModifyDirectXBehavior = GetPrivateProfileInt("Main", "bModifyDirectXBehavior", 0, iniDir);
 		g_bRedoHashtables = GetPrivateProfileInt("Main", "bRedoHashtables", 0, iniDir);
-		if (g_bGTCFix <= 0 && g_bFastExit <= 0 && g_bEnableThreadingTweaks <= 0 && g_bModifyDirectXBehavior <= 0 && g_bRedoHashtables <= 0) return false;
-		PrintLog("LS : 2");
+		
+		if (g_bGTCFix <= 0 && g_bFastExit <= 0 && g_bEnableThreadingTweaks <= 0 && g_bModifyDirectXBehavior <= 0 && g_bRedoHashtables <= 0) 
+			return false;
+
 		g_bFPSFix = GetPrivateProfileInt("GTC", "bFPSFix", 0, iniDir);
-		g_bAutomaticFPSFix = 0;
+
 		g_iMaxFPS = GetPrivateProfileInt("FPSFix", "iMaxFPSTolerance", 59, iniDir);
 		g_iMinFPS = GetPrivateProfileInt("FPSFix", "iMinFPSTolerance", 20, iniDir);
 		g_bfMaxTime = GetPrivateProfileInt("FPSFix", "bfMaxTime", 1, iniDir);
 		g_bResizeHashtables = GetPrivateProfileInt("Hashtables", "bResizeHashtables", 1, iniDir);
-		// bRemoveRCSafeGuard and bRemove0x80SafeGuard are left as legacy names
-		g_iTweakRCSafeGuard = GetPrivateProfileInt("ThreadingTweaks", "iTweakRCSafeGuard", 0, iniDir);
-		g_iTweakMiscRendererSafeGuards = GetPrivateProfileInt("ThreadingTweaks", "iTweakMiscRendererSafeGuard", 0, iniDir);
+
+		g_iReplaceTextureCreationLocks = GetPrivateProfileInt("ThreadingTweaks", "iReplaceTextureCreationLocks", 1, iniDir);
+		g_iReplaceGeometryPrecacheLocks = GetPrivateProfileInt("ThreadingTweaks", "iReplaceGeometryPrecacheLocks", 1, iniDir);
+
+		// Legacy support
+		{
+			int iTweakRCSafeGuard = GetPrivateProfileInt("ThreadingTweaks", "iTweakRCSafeGuard", 0xFFFFFFFF, iniDir);
+			int iTweakMiscRendererSafeGuard = GetPrivateProfileInt("ThreadingTweaks", "iTweakMiscRendererSafeGuard", 0xFFFFFFFF, iniDir);
+			if (iTweakRCSafeGuard != 0xFFFFFFFF)
+				g_iReplaceTextureCreationLocks = iTweakRCSafeGuard;
+
+			if (iTweakMiscRendererSafeGuard != 0xFFFFFFFF)
+				g_iReplaceGeometryPrecacheLocks = iTweakMiscRendererSafeGuard;
+		}
 
 		g_bTweakMiscCriticalSections= GetPrivateProfileInt("ThreadingTweaks", "bTweakMiscCriticalSections", 0, iniDir);
 		g_bReplaceDeadlockCSWithWaitAndSleep = GetPrivateProfileInt("ThreadingTweaks", "bReplaceDeadlockCSWithWaitAndSleep", 0, iniDir);

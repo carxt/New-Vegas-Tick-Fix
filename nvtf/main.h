@@ -1,12 +1,10 @@
 #pragma once
-
+#include "float.h"
 
 float* g_FPSGlobal = (float*)(0x11F6398);
 float* fMaxTime = (float*)0x1267B38;
-bool initTimeHook = false;
 float fLowerMaxTimeBoundary = 0;
 float fMaxTimeDefault = 0;
-DWORD** InterfSingleton = (DWORD**)0x11D8A80;
 DWORD** BGSLoadGameSingleton = (DWORD**)0x11DDF38;
 
 
@@ -17,26 +15,20 @@ int g_iMaxFPS = 1;
 int g_iMinFPS = 1;
 int g_bfMaxTime;
 int g_bEnableThreadingTweaks = 0;
-int g_iTweakRCSafeGuard = 0;
-int g_iTweakMiscRendererSafeGuards = 0;
+int g_iReplaceTextureCreationLocks = 0;
+int g_iReplaceGeometryPrecacheLocks = 0;
 int g_bTweakMiscCriticalSections = 0;
 int g_bReplaceDeadlockCSWithWaitAndSleep = 0;
 int g_bSpiderHandsFix = 0;
 double	fDesiredMax = 1;
 double	fDesiredMin = 1000;
-double	fHavokMax = 1;
-double	fHavokMin = 1;
 int g_bModifyDirectXBehavior = 1;
 int g_bRedoHashtables = 0;
 int g_bResizeHashtables = 1;
 int g_bAlternateGTCFix = 0;
 int g_bRemoveGTCLimits = 0;
-int g_bAutomaticFPSFix = 0;
 
 double g_fMaxTimeLowerBoundary = 0;
-
-
-
 
 #include "hooks.h"
 #include "FPSTimer.h"
@@ -110,12 +102,10 @@ void __stdcall TimeGlobalHook(void* unused) {
 	if ((*BGSLoadGameSingleton && ThisStdCall<bool>((uintptr_t)0x042CE10, *BGSLoadGameSingleton)) || *g_bIsLoadingNewGame)
 	{
 		*g_FPSGlobal = 0;
-
 	}
 	else
 	{
 		*g_FPSGlobal = (Delta > 0) ? ((Delta < fDesiredMin) ? ((Delta > fDesiredMax) ? Delta : fDesiredMax) : fDesiredMin) : 0;
-
 	}
 	ClampGameCounters();
 }
@@ -140,25 +130,23 @@ void HookFPSStuff()
 void DoPatches()
 {
 	if (g_bEnableThreadingTweaks) {
-		TweakRefCountSafeGuard(g_iTweakRCSafeGuard);
+		ReplaceTextureCreationLocks(g_iReplaceTextureCreationLocks);
 		if (g_bTweakMiscCriticalSections) 
 			TweakMiscCriticalSections();
 
 		if (g_bReplaceDeadlockCSWithWaitAndSleep)
 			TurnProblematicCSIntoBusyLocks();
 
-		TweakRendererLockSafeGuard(g_iTweakMiscRendererSafeGuards);		
+		ReplaceGeometryPrecacheLocks(g_iReplaceGeometryPrecacheLocks);		
 	}
 
 	if (g_bFastExit)
 		WriteRelJump(0x86B66E, (UInt32)FastExit);
 
 	if (g_bRedoHashtables)
-		DoHashTableStuff();
+		ResizeHashTables();
 
 	if (g_bGTCFix) {
-		PrintLog("TGT ENABLED");
-
 		FPSStartCounter();
 		uintptr_t TargetGTC = (uintptr_t)ReturnCounter_WRAP;
 		if (g_bAlternateGTCFix)
@@ -168,8 +156,6 @@ void DoPatches()
 
 		if (g_bFPSFix)
 		{
-			PrintLog("FPSFIX ENABLED");
-
 			fDesiredMax = 1000.0 / double(g_iMaxFPS);
 			fDesiredMin = 1000.0 / double(g_iMinFPS);
 			fMaxTimeDefault = *fMaxTime;

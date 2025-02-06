@@ -1,14 +1,12 @@
 #pragma once
-extern void __stdcall SafeWrite8(UInt32 addr, UInt32 data);
-extern void PrintLog(const char* fmt, ...);
 
-struct BGSLightCriticalSection {
-	uintptr_t OwningThreadId = 0;
-	uintptr_t LockCount = 0;
-
+struct BSSpinLock {
+	UInt32 uiOwningThread = 0;
+	UInt32 uiLockCount = 0;
+	UInt32 unk08[6] = {};
 };
 
-void TweakRefCountSafeGuard(int mode);
-void TweakRendererLockSafeGuard(int mode);
+void ReplaceTextureCreationLocks(int mode);
+void ReplaceGeometryPrecacheLocks(int mode);
 void TweakMiscCriticalSections();
 void TurnProblematicCSIntoBusyLocks();
