@@ -18,7 +18,7 @@ Copy to the NVSE/Data/Plugins directory
 
 ### Dependencies
 
-###### Visual Studio 2013
+###### Visual Studio 2022
 ###### New Vegas Script Extender
 
 
