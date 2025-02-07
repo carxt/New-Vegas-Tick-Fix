@@ -31,11 +31,15 @@ extern "C" {
 			return false;
 		}
 
-		return true;
+		return !nvse->isEditor;
 	}
 
 	bool NVSEPlugin_Load(const NVSEInterface* nvse)
 	{
+		[[unlikely]]
+		if (nvse->isEditor)
+			return true;
+
 		char iniDir[MAX_PATH];
 		GetModuleFileNameA(GetModuleHandle(NULL), iniDir, MAX_PATH);
 		strcpy((char*)(strrchr(iniDir, '\\') + 1), "Data\\NVSE\\Plugins\\NVTF.ini");
