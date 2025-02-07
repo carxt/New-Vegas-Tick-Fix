@@ -18,6 +18,7 @@ int g_bEnableThreadingTweaks = 0;
 int g_iReplaceTextureCreationLocks = 0;
 int g_iReplaceGeometryPrecacheLocks = 0;
 int g_bTweakMiscCriticalSections = 0;
+int g_bAddPauseToSpinLocks = 0;
 int g_bReplaceDeadlockCSWithWaitAndSleep = 0;
 int g_bSpiderHandsFix = 0;
 double	fDesiredMax = 1;
@@ -136,6 +137,9 @@ void DoPatches()
 
 		if (g_bReplaceDeadlockCSWithWaitAndSleep)
 			TurnProblematicCSIntoBusyLocks();
+
+		if (g_bAddPauseToSpinLocks)
+			AddPauseToSpinLocks();
 
 		ReplaceGeometryPrecacheLocks(g_iReplaceGeometryPrecacheLocks);		
 	}

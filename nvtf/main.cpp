@@ -70,6 +70,7 @@ extern "C" {
 		}
 
 		g_bTweakMiscCriticalSections= GetPrivateProfileInt("ThreadingTweaks", "bTweakMiscCriticalSections", 0, iniDir);
+		g_bAddPauseToSpinLocks = GetPrivateProfileInt("ThreadingTweaks", "bAddPauseToSpinLocks", 0, iniDir);
 		g_bReplaceDeadlockCSWithWaitAndSleep = GetPrivateProfileInt("ThreadingTweaks", "bReplaceDeadlockCSWithWaitAndSleep", 0, iniDir);
 
 		g_bSpiderHandsFix = GetPrivateProfileInt("FPSFix", "bSpiderHandsFix", 0, iniDir);

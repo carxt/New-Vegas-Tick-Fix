@@ -9,4 +9,5 @@ struct BSSpinLock {
 void ReplaceTextureCreationLocks(int mode);
 void ReplaceGeometryPrecacheLocks(int mode);
 void TweakMiscCriticalSections();
+void AddPauseToSpinLocks();
 void TurnProblematicCSIntoBusyLocks();

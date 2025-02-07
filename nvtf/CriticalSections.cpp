@@ -123,7 +123,9 @@ void TweakMiscCriticalSections()
 	// Replaces NiCriticalSection::Enter
 	SafeWrite8(0x04538EB, 0x90);
 	WriteRelCall(0x04538EC, (uintptr_t)hk_EnterCriticalSection);
+}
 
+void AddPauseToSpinLocks() {
 	// BSSpinlock::Lock
 	WriteRelCall(0x040FC63, (uintptr_t)IntrinsicSleepHook);
 	WriteRelCall(0x040FC57, (uintptr_t)IntrinsicSleepHook);
