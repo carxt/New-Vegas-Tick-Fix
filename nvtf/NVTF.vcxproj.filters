@@ -4,39 +4,106 @@
     <Filter Include="nvse">
       <UniqueIdentifier>{aaf5e4e0-c48a-4492-81b0-ab025f6ce945}</UniqueIdentifier>
     </Filter>
+    <Filter Include="internal">
+      <UniqueIdentifier>{0d818afa-0a2d-4390-8e7e-41d01af54981}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{63b686cf-40e1-4228-acc4-4095f355e584}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="internal\Game">
+      <UniqueIdentifier>{7dde9514-90f9-4aaa-ab1f-549b7a0ce0b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="internal\Game\Bethesda">
+      <UniqueIdentifier>{b3488f01-2370-4aaa-b261-54449ae55e33}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\nvse\nvse\SafeWrite.cpp">
-      <Filter>nvse</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="CriticalSections.cpp" />
-    <ClCompile Include="direct3dhooks.cpp" />
-    <ClCompile Include="FPSTimer.cpp" />
+    <ClCompile Include="internal\ThreadingTweaks.cpp">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\D3DHooks.cpp">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\TickFix.cpp">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\HashTables.cpp">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\FastExit.cpp">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\SafeWrite\SafeWrite.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Game\Bethesda\BGSSaveLoadGame.cpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Game\Bethesda\TimeGlobal.cpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Game\Bethesda\bhkWorld.cpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Game\Bethesda\StartMenu.cpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Game\Bethesda\Interface.cpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Game\Bethesda\TESMain.cpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\nvse\nvse\SafeWrite.h">
+    <ClInclude Include="internal\ThreadingTweaks.hpp">
+      <Filter>internal</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\D3DHooks.hpp">
+      <Filter>internal</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\TickFix.hpp">
+      <Filter>internal</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\HashTables.hpp">
+      <Filter>internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nvse\nvse_version.h">
       <Filter>nvse</Filter>
     </ClInclude>
-    <ClInclude Include="main.h" />
-    <ClInclude Include="hooks.h" />
-    <ClInclude Include="FPSTimer.h" />
-    <ClInclude Include="CriticalSections.h" />
-    <ClInclude Include="direct3dhooks.h" />
-    <ClInclude Include="..\nvse\nvse\nvse_version.h">
+    <ClInclude Include="..\nvse\PluginAPI.h">
       <Filter>nvse</Filter>
     </ClInclude>
-    <ClInclude Include="..\nvse\nvse\PluginAPI.h">
-      <Filter>nvse</Filter>
+    <ClInclude Include="..\shared\Defines.hpp">
+      <Filter>shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\nvse\nvse\prefix.h">
-      <Filter>nvse</Filter>
+    <ClInclude Include="internal\FastExit.hpp">
+      <Filter>internal</Filter>
     </ClInclude>
-    <ClInclude Include="..\nvse\nvse\Utilities.h">
-      <Filter>nvse</Filter>
+    <ClInclude Include="..\shared\SafeWrite\SafeWrite.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\BGSSaveLoadGame.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\TimeGlobal.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\bhkWorld.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\StartMenu.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\Interface.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\TESMain.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="exports.def" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
