@@ -120,26 +120,28 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\nvse;$(SolutionDir)\..\nvse\nvse;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\nvse;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;NVSE_PLUGIN_EXAMPLE_EXPORTS;RUNTIME_VERSION=0x040020D0;RUNTIME;_CRT_NO_VA_START_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <ForcedIncludeFiles>nvse/prefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <ForcedIncludeFiles>shared\defines.hpp;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
       <StringPooling>true</StringPooling>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <LanguageStandard>stdcpp23</LanguageStandard>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -147,7 +149,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
       <TargetMachine>MachineX86</TargetMachine>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
@@ -208,28 +210,48 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\nvse\nvse\SafeWrite.cpp" />
-    <ClCompile Include="CriticalSections.cpp" />
-    <ClCompile Include="direct3dhooks.cpp" />
-    <ClCompile Include="FPSTimer.cpp" />
+    <ClCompile Include="..\shared\SafeWrite\SafeWrite.cpp" />
+    <ClCompile Include="internal\FastExit.cpp" />
+    <ClCompile Include="internal\Game\Bethesda\BGSSaveLoadGame.cpp" />
+    <ClCompile Include="internal\Game\Bethesda\bhkWorld.cpp" />
+    <ClCompile Include="internal\Game\Bethesda\Interface.cpp" />
+    <ClCompile Include="internal\Game\Bethesda\StartMenu.cpp" />
+    <ClCompile Include="internal\Game\Bethesda\TESMain.cpp" />
+    <ClCompile Include="internal\Game\Bethesda\TimeGlobal.cpp" />
+    <ClCompile Include="internal\ThreadingTweaks.cpp" />
+    <ClCompile Include="internal\D3DHooks.cpp" />
+    <ClCompile Include="internal\TickFix.cpp" />
+    <ClCompile Include="internal\HashTables.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\nvse\nvse\nvse_version.h" />
-    <ClInclude Include="..\nvse\nvse\PluginAPI.h" />
-    <ClInclude Include="..\nvse\nvse\prefix.h" />
-    <ClInclude Include="..\nvse\nvse\SafeWrite.h" />
-    <ClInclude Include="..\nvse\nvse\Utilities.h" />
-    <ClInclude Include="CriticalSections.h" />
-    <ClInclude Include="direct3dhooks.h" />
-    <ClInclude Include="FPSTimer.h" />
-    <ClInclude Include="hooks.h" />
-    <ClInclude Include="main.h" />
+    <ClInclude Include="..\nvse\nvse_version.h" />
+    <ClInclude Include="..\nvse\PluginAPI.h" />
+    <ClInclude Include="..\shared\Defines.hpp" />
+    <ClInclude Include="..\shared\SafeWrite\SafeWrite.hpp" />
+    <ClInclude Include="internal\FastExit.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\BGSSaveLoadGame.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\bhkWorld.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\Interface.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\StartMenu.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\TESMain.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\TimeGlobal.hpp" />
+    <ClInclude Include="internal\ThreadingTweaks.hpp" />
+    <ClInclude Include="internal\D3DHooks.hpp" />
+    <ClInclude Include="internal\TickFix.hpp" />
+    <ClInclude Include="internal\HashTables.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="exports.def" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets" Condition="Exists('packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.DXSDK.D3DX.9.29.952.8\build\native\Microsoft.DXSDK.D3DX.targets'))" />
+  </Target>
 </Project>
