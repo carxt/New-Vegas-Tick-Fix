@@ -129,8 +129,7 @@ namespace ThreadingTweaks {
 		}
 	}
 
-	void TweakMiscCriticalSections()
-	{
+	void TweakMiscCriticalSections() {
 		// Replaces NiGlobalStringTable's critical section creation
 		// Works only if JIP is not installed, as JIP replaces NiGlobalStringTable with its own implementation
 		SafeWrite8(0xA5B571, 0x90);
