@@ -7,8 +7,10 @@
 #include <internal/FastExit.hpp>
 #include <internal/TickFix.hpp>
 
+constexpr uint32_t		MIN_NVSE_VERSION = PACKED_NVSE_VERSION;
 constexpr uint32_t		PLUGIN_VERSION = 10;
 constexpr const char*	PLUGIN_NAME = "NVTF";
+constexpr const char*	PLUGIN_FULL_NAME = "New Vegas Tick Fix";
 
 namespace Main {
 
@@ -70,10 +72,15 @@ EXTERN_DLL_EXPORT bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* i
 	info->infoVersion	= PluginInfo::kInfoVersion;
 
 	// version checks
-	if (nvse->nvseVersion < NVSE_VERSION_INTEGER) [[unlikely]] {
-		char text[72];
-		sprintf_s(text, "NVSE version too old (got %08X expected at least %08X)", nvse->nvseVersion, NVSE_VERSION_INTEGER);
-		MessageBoxA(NULL, text, PLUGIN_NAME, MB_OK);
+	if (nvse->nvseVersion < MIN_NVSE_VERSION) [[unlikely]] {
+		char cText[96];
+		uint32_t uiMajor = 0;
+		uint32_t uiMinor = 0;
+		uint32_t uiBuild = 0;
+		UNPACK_NEW_VEGAS_VERSION(nvse->nvseVersion, uiMajor, uiMinor, uiBuild);
+		sprintf_s(cText, "Your xNVSE version is too old!\nInstalled: %i.%i.%i\nRequired: %i.%i.%i", 
+			uiMajor, uiMinor, uiBuild, NVSE_VERSION_INTEGER, NVSE_VERSION_INTEGER_MINOR, NVSE_VERSION_INTEGER_BETA);
+		MessageBoxA(NULL, cText, PLUGIN_FULL_NAME, MB_OK | MB_ICONERROR);
 		return false;
 	}
 
