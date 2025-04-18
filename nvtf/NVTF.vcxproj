@@ -132,6 +132,7 @@
     <ClCompile Include="internal\FastExit.cpp" />
     <ClCompile Include="internal\Game\Bethesda\BGSSaveLoadGame.cpp" />
     <ClCompile Include="internal\Game\Bethesda\bhkWorld.cpp" />
+    <ClCompile Include="internal\Game\Bethesda\BSTimer.cpp" />
     <ClCompile Include="internal\Game\Bethesda\Interface.cpp" />
     <ClCompile Include="internal\Game\Bethesda\StartMenu.cpp" />
     <ClCompile Include="internal\Game\Bethesda\TESMain.cpp" />
@@ -152,6 +153,7 @@
     <ClInclude Include="internal\FastExit.hpp" />
     <ClInclude Include="internal\Game\Bethesda\BGSSaveLoadGame.hpp" />
     <ClInclude Include="internal\Game\Bethesda\bhkWorld.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\BSTimer.hpp" />
     <ClInclude Include="internal\Game\Bethesda\Interface.hpp" />
     <ClInclude Include="internal\Game\Bethesda\StartMenu.hpp" />
     <ClInclude Include="internal\Game\Bethesda\TESMain.hpp" />

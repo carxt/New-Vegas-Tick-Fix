@@ -83,6 +83,13 @@ namespace TickFix {
 		}
 	}
 
+	DWORD GetTickCountHook() {
+		if (Setting::bAlternateGTCFix) [[unlikely]]
+			return tGt::ReturnCounter();
+		else [[likely]]
+			return QPC::ReturnCounter();
+	}
+
 	double GetTimeDelta() {
 		if (Setting::bAlternateGTCFix) [[unlikely]]
 			return tGt::GetTimeDelta();
@@ -97,8 +104,7 @@ namespace TickFix {
 			QPC::Initialize();
 	}
 
-	void ClampGameCounters() {
-		float& fClamp = TimeGlobal::GetSingleton()->fClamp;
+	void ClampGameCounters(float& fClamp) {
 		float& fMaxTime = *bhkWorld::fMaxTime;
 		if (Setting::bSpiderHandsFix && fClamp > FLT_EPSILON) {
 			fClamp = 1000.f / ((1000.f / fClamp) * fTimerOffsetMult);
@@ -117,73 +123,67 @@ namespace TickFix {
 		}
 	}
 
-	void __stdcall TimeGlobalHook(float unused) {
-		double dDelta = GetTimeDelta();
+	class BSTimerSafe : public BSTimer {
+	public:
+		void TimeGlobalHook() {
+			double dDelta = GetTimeDelta();
 
-		if (Setting::bfMaxTime) [[likely]] {
-			float fMaxTime = Setting::dMaxTimeLowerBoundaryS;
-			if (dDelta > FLT_EPSILON) [[likely]] {
-				if (dDelta < dDesiredMinMS)
-					fMaxTime = dDelta > dDesiredMaxMS ? (dDelta / 1000.0) : dDesiredMaxS;
-				else
-					fMaxTime = dDesiredMinS;
+			if (Setting::bfMaxTime) [[likely]] {
+				float fMaxTime = Setting::dMaxTimeLowerBoundaryS;
+				if (dDelta > FLT_EPSILON) [[likely]] {
+					if (dDelta < dDesiredMinMS)
+						fMaxTime = dDelta > dDesiredMaxMS ? (dDelta / 1000.0) : dDesiredMaxS;
+					else
+						fMaxTime = dDesiredMinS;
+				}
+
+				*bhkWorld::fMaxTime = fMaxTime;
 			}
 
-			*bhkWorld::fMaxTime = fMaxTime;
+			fClamp = 0.f;
+			BGSSaveLoadGame* pSaveLoad = BGSSaveLoadGame::GetSingleton();
+			bool bSaveLoading = pSaveLoad && pSaveLoad->IsLoading();
+			if (!bSaveLoading && !Interface::IsLoadingNewGame() && dDelta > 0.f) [[likely]] {
+				if (dDelta < dDesiredMinMS)
+					fClamp = dDelta > dDesiredMaxMS ? dDelta : dDesiredMaxMS;
+				else
+					fClamp = dDesiredMinMS;
+			}
+
+			ClampGameCounters(fClamp);
+			Update(GetTickCountHook());
 		}
 
-		float fClamp = 0.f;
-		BGSSaveLoadGame* pSaveLoad = BGSSaveLoadGame::GetSingleton();
-		bool bSaveLoading = pSaveLoad && pSaveLoad->IsLoading();
-		if (!bSaveLoading && !Interface::IsLoadingNewGame() && dDelta > 0.f) [[likely]] {
-			if (dDelta < dDesiredMinMS)
-				fClamp = dDelta > dDesiredMaxMS ? dDelta : dDesiredMaxMS;
-			else
-				fClamp = dDesiredMinMS;
+		void TimeGlobalHook_NoSafeGuards() {
+			double dDelta = GetTimeDelta();
+
+			if (Setting::bfMaxTime) [[likely]] {
+				float fMaxTime = Setting::dMaxTimeLowerBoundaryS;
+				if (dDelta > 0.9 && dDelta < dMaxTimeLowerBoundaryMS)
+					fMaxTime = dDelta > dDesiredMaxMS ? (dDelta / 1000.0) : dDesiredMaxS;
+
+				*bhkWorld::fMaxTime = fMaxTime;
+			}
+
+			fClamp = 0.f;
+			if (dDelta > 0.0) [[likely]] {
+				if (dDelta < dDesiredMinMS)
+					fClamp = dDelta > dDesiredMaxMS ? dDelta : dDesiredMaxMS;
+				else
+					fClamp = dDesiredMinMS;
+			}
+
+			ClampGameCounters(fClamp);
+			Update(GetTickCountHook());
 		}
 
-		TimeGlobal::GetSingleton()->fClamp = fClamp;
-		ClampGameCounters();
-	}
-
-	void __stdcall TimeGlobalHook_NoSafeGuards(float unused) {
-		double dDelta = GetTimeDelta();
-
-		if (Setting::bfMaxTime) [[likely]] {
-			float fMaxTime = Setting::dMaxTimeLowerBoundaryS;
-			if (dDelta > 0.9 && dDelta < dMaxTimeLowerBoundaryMS)
-				fMaxTime = dDelta > dDesiredMaxMS ? (dDelta / 1000.0) : dDesiredMaxS;
-
-			*bhkWorld::fMaxTime = fMaxTime;
-		}
-
-		float fClamp = 0.f;
-		if (dDelta > 0.0) [[likely]] {
-			if (dDelta < dDesiredMinMS)
-				fClamp = dDelta > dDesiredMaxMS ? dDelta : dDesiredMaxMS;
-			else
-				fClamp = dDesiredMinMS;
-		}
-
-		TimeGlobal::GetSingleton()->fClamp = fClamp;
-		ClampGameCounters();
-	}
+	};
 
 	void InitTimerHook() {
-		uintptr_t TimeHookCall = 0;
 		if (Setting::bRemoveGTCLimits) [[unlikely]]
-			TimeHookCall = uintptr_t(TimeGlobalHook_NoSafeGuards);
+			ReplaceCallEx(0x86F296, &BSTimerSafe::TimeGlobalHook_NoSafeGuards);
 		else [[likely]]
-			TimeHookCall = uintptr_t(TimeGlobalHook);
-
-		ReplaceCall(0x86E667, TimeHookCall);
-	}
-
-	DWORD GetTickCountHook() {
-		if (Setting::bAlternateGTCFix) [[unlikely]]
-			return tGt::ReturnCounter();
-		else [[likely]]
-			return QPC::ReturnCounter();
+			ReplaceCallEx(0x86F296, &BSTimerSafe::TimeGlobalHook);
 	}
 
 	void ReadINI(const char* iniPath) {

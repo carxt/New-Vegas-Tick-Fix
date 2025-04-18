@@ -110,22 +110,9 @@ namespace ThreadingTweaks {
 
 	void ReplaceGeometryPrecacheLocks() {
 		// NiDX9Renderer::PerformPrecache
-		switch (Setting::ucReplaceGeometryPrecacheLocks) {
-		case 1: [[likely]]
+		if (Setting::ucReplaceGeometryPrecacheLocks) {
 			SafeWrite16(0xE74126, 0xBE90);
 			SafeWrite32(0xE74128, (uintptr_t)EnterCriticalSectionRendererHook);
-			break;
-		case 2:
-			// Removes renderer and precache critical sections
-			// Enter
-			SafeWrite16(0xE7413E, 0x905F);
-			SafeWrite16(0xE7414B, 0x9058);
-			// Leave
-			SafeWrite16(0xE744A0, 0x905A);
-			SafeWrite16(0xE744A3, 0x905F);
-			break;
-		default:
-			break;
 		}
 	}
 

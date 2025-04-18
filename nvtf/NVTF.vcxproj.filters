@@ -46,6 +46,9 @@
     <ClCompile Include="internal\Game\Bethesda\TESMain.cpp">
       <Filter>internal\Game\Bethesda</Filter>
     </ClCompile>
+    <ClCompile Include="internal\Game\Bethesda\BSTimer.cpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClCompile>
     <ClCompile Include="internal\Game\Gamebryo\NiDX9Renderer.cpp">
       <Filter>internal\Game\Gamebryo</Filter>
     </ClCompile>
@@ -97,6 +100,9 @@
       <Filter>internal\Game\Bethesda</Filter>
     </ClInclude>
     <ClInclude Include="internal\Game\Bethesda\TESMain.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\BSTimer.hpp">
       <Filter>internal\Game\Bethesda</Filter>
     </ClInclude>
     <ClInclude Include="internal\Game\Gamebryo\NiDX9Renderer.hpp">
