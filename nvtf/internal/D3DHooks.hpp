@@ -3,4 +3,5 @@
 namespace D3DHooks {
 	void ReadINI(const char* iniPath);
 	void InitHooks();
+	void InitEarlyHooks();
 }

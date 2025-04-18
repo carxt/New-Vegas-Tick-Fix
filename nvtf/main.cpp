@@ -1,5 +1,6 @@
 #include <nvse_version.h>
 #include <PluginAPI.h>
+#include <internal/INIUtils.hpp>
 #include <internal/D3DHooks.hpp>
 #include <internal/HashTables.hpp>
 #include <internal/ThreadingTweaks.hpp>
@@ -10,6 +11,9 @@ constexpr uint32_t		PLUGIN_VERSION = 10;
 constexpr const char*	PLUGIN_NAME = "NVTF";
 
 namespace Main {
+
+	bool bINIRead = false;
+
 	namespace Setting {
 		bool bGTCFix				= false;
 		bool bFastExit				= false;
@@ -51,6 +55,11 @@ namespace Main {
 		if (Setting::bGTCFix) [[likely]]
 			TickFix::InitHooks();
 	}
+
+	void InitEarlyHooks() {
+		if (Setting::bModifyDirectXBehavior) [[likely]]
+			D3DHooks::InitEarlyHooks();
+	}
 }
 
 
@@ -71,15 +80,20 @@ EXTERN_DLL_EXPORT bool NVSEPlugin_Query(const NVSEInterface* nvse, PluginInfo* i
 	return !nvse->isEditor;
 }
 
+EXTERN_DLL_EXPORT bool NVSEPlugin_Preload() {
+	Main::bINIRead = Main::ReadINI(INIUtils::GetINIPath());
+
+	if (Main::bINIRead)
+		Main::InitEarlyHooks();
+
+	return true;
+}
+
 EXTERN_DLL_EXPORT bool NVSEPlugin_Load(const NVSEInterface* nvse) {
 	if (nvse->isEditor) [[unlikely]]
 		return true;
 
-	char iniDir[MAX_PATH];
-	GetModuleFileNameA(GetModuleHandle(NULL), iniDir, MAX_PATH);
-	strcpy((char*)(strrchr(iniDir, '\\') + 1), "Data\\NVSE\\Plugins\\NVTF.ini");
-
-	if (Main::ReadINI(iniDir)) [[likely]]
+	if (Main::bINIRead) [[likely]]
 		Main::InitHooks();
 
 	return true;
