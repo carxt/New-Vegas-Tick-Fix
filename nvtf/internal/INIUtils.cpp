@@ -4,7 +4,7 @@ namespace INIUtils {
 
 	const char cINIPath[] = "Data\\NVSE\\Plugins\\NVTF.ini";
 
-	char cINIDir[MAX_PATH];
+	char cINIDir[MAX_PATH] = {};
 
 	const char* GetINIPath() {
 		if (cINIDir[0] != 0)
