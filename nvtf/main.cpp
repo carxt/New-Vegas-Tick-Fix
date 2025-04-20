@@ -25,6 +25,15 @@ namespace Main {
 	}
 
 	bool ReadINI(const char* iniPath) {
+		DWORD dwResult = GetFileAttributes(iniPath);
+		if (dwResult == INVALID_FILE_ATTRIBUTES) {
+			char cText[MAX_PATH];
+			sprintf_s(cText, "%s.ini not found.\n%s cannot be used without it, please install it.", PLUGIN_NAME, PLUGIN_FULL_NAME);
+			MessageBox(nullptr, cText, PLUGIN_FULL_NAME, MB_OK | MB_ICONERROR);
+			ExitProcess(0);
+			return false;
+		}
+
 		Setting::bGTCFix					= GetPrivateProfileInt("Main", "bGTCFix", 0, iniPath);
 		Setting::bFastExit					= GetPrivateProfileInt("Main", "bFastExit", 1, iniPath);
 		Setting::bEnableThreadingTweaks		= GetPrivateProfileInt("Main", "bEnableThreadingTweaks", 0, iniPath);
