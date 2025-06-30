@@ -83,7 +83,7 @@ namespace TickFix {
 		}
 	}
 
-	DWORD GetTickCountHook() {
+	DWORD __stdcall GetTickCountHook() {
 		if (Setting::bAlternateGTCFix) [[unlikely]]
 			return tGt::ReturnCounter();
 		else [[likely]]
