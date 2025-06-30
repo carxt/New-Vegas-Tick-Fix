@@ -40,13 +40,13 @@ Copy to the NVSE/Data/Plugins directory
 
 ###### Critical Section spin tweaking.
 
-
+###### DXGI Flip Model in Windowed mode.
 
 ### Credits:
 
 ###### Carxt, lStewieAl, jazzisparis - feature developers
 ###### tgspy - QA Tester, Q&A Manager, community feedback
-
+###### HoShiMin - [Sig](https://github.com/HoShiMin/Sig)
 
 ### Special thanks to:
 ###### ceski.
