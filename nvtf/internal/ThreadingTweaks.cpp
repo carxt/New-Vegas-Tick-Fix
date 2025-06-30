@@ -79,15 +79,15 @@ namespace ThreadingTweaks {
 		case 1: [[likely]]
 			// NiDX9Renderer::CreateSourceTextureRendererData
 			SafeWrite16(0xE6DC4C, 0x90);
-			WriteRelCall(0xE6DC4D, (uintptr_t)EnterCriticalSectionRendererHook);
+			WriteRelCall(0xE6DC4D, EnterCriticalSectionRendererHook);
 
 			// NiDX9TextureManager::PrepareTextureForRendering
 			SafeWrite16(0xE90B46, 0x90);
-			WriteRelCall(0xE90B47, (uintptr_t)EnterCriticalSectionRendererHook);
+			WriteRelCall(0xE90B47, EnterCriticalSectionRendererHook);
 
 			// NiDX9TextureManager::PrecacheTexture
 			SafeWrite16(0xE90C91, 0x90);
-			WriteRelCall(0xE90C92, (uintptr_t)EnterCriticalSectionRendererHook);
+			WriteRelCall(0xE90C92, EnterCriticalSectionRendererHook);
 			break;
 		case 2:
 			// NiDX9Renderer::CreateSourceTextureRendererData
@@ -114,7 +114,7 @@ namespace ThreadingTweaks {
 		switch (Setting::ucReplaceGeometryPrecacheLocks) {
 		case 0:
 			SafeWrite16(0xE74126, 0xBE90);
-			SafeWrite32(0xE74128, (uintptr_t)EnterCriticalSectionRendererHook);
+			SafeWrite32(0xE74128, reinterpret_cast<uint32_t>(EnterCriticalSectionRendererHook));
 			break;
 		default: [[likely]]
 			GeometryPrecacheQueue::InitHooks();
@@ -165,11 +165,11 @@ namespace ThreadingTweaks {
 		static BSSpinLock LipFileLCS = {};
 
 		// Hooks in Actor::SpeakSoundFunction, replaces critical section with a spin lock
-		SafeWrite32(0x8A2252 + 1, (uintptr_t)&LipFileLCS);
+		SafeWrite32(0x8A2252 + 1, reinterpret_cast<uint32_t>(&LipFileLCS));
 		WriteRelCall(0x8A2257, 0x40FBF0);
-		SafeWrite32(0x8A245F + 1, (uintptr_t)&LipFileLCS);
+		SafeWrite32(0x8A245F + 1, reinterpret_cast<uint32_t>(&LipFileLCS));
 		WriteRelCall(0x8A2464, 0x40FBA0);
-		SafeWrite32(0x8A2CC9 + 1, (uintptr_t)&LipFileLCS);
+		SafeWrite32(0x8A2CC9 + 1, reinterpret_cast<uint32_t>(&LipFileLCS));
 		WriteRelCall(0x8A2CCE, 0x40FBA0);
 	}
 

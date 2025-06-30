@@ -1,7 +1,7 @@
 #include "BGSSaveLoadGame.hpp"
 
 BGSSaveLoadGame* BGSSaveLoadGame::GetSingleton() {
-    return *(BGSSaveLoadGame**)0x11DDF38;
+    return *reinterpret_cast<BGSSaveLoadGame**>(0x11DDF38);
 }
 
 // GAME - 0x42CE10
