@@ -1,7 +1,7 @@
 #include "StartMenu.hpp"
 
 StartMenu* StartMenu::GetSingleton() {
-	return *(StartMenu**)0x11DAAC0;
+	return *reinterpret_cast<StartMenu**>(0x11DAAC0);
 }
 
 bool StartMenu::GetSettingsChanged() const {

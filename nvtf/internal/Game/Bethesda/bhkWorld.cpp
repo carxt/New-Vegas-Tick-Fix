@@ -1,3 +1,3 @@
 #include "bhkWorld.hpp"
 
-float* const bhkWorld::fMaxTime = (float*)0x1267B38;
+float* const bhkWorld::fMaxTime = reinterpret_cast<float*>(0x1267B38);
