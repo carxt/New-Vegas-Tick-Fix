@@ -70,6 +70,12 @@
     <ClCompile Include="internal\INIUtils.cpp">
       <Filter>internal</Filter>
     </ClCompile>
+    <ClCompile Include="internal\GeometryPrecacheQueue.cpp">
+      <Filter>internal\Patches</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Game\Gamebryo\NiRenderer.cpp">
+      <Filter>internal\Game\Gamebryo</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\nvse\nvse_version.h">
@@ -125,6 +131,21 @@
     </ClInclude>
     <ClInclude Include="internal\FastExit.hpp">
       <Filter>internal\Patches</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\GeometryPrecacheQueue.hpp">
+      <Filter>internal\Patches</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Gamebryo\NiSmartPointer.hpp">
+      <Filter>internal\Game\Gamebryo</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Gamebryo\NiRenderer.hpp">
+      <Filter>internal\Game\Gamebryo</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Gamebryo\NiCriticalSection.hpp">
+      <Filter>internal\Game\Gamebryo</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Gamebryo\NiRefObject.hpp">
+      <Filter>internal\Game\Gamebryo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
