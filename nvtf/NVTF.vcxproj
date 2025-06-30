@@ -138,6 +138,8 @@
     <ClCompile Include="internal\Game\Bethesda\TESMain.cpp" />
     <ClCompile Include="internal\Game\Bethesda\TimeGlobal.cpp" />
     <ClCompile Include="internal\Game\Gamebryo\NiDX9Renderer.cpp" />
+    <ClCompile Include="internal\Game\Gamebryo\NiRenderer.cpp" />
+    <ClCompile Include="internal\GeometryPrecacheQueue.cpp" />
     <ClCompile Include="internal\INIUtils.cpp" />
     <ClCompile Include="internal\ThreadingTweaks.cpp" />
     <ClCompile Include="internal\D3DHooks.cpp" />
@@ -158,7 +160,12 @@
     <ClInclude Include="internal\Game\Bethesda\StartMenu.hpp" />
     <ClInclude Include="internal\Game\Bethesda\TESMain.hpp" />
     <ClInclude Include="internal\Game\Bethesda\TimeGlobal.hpp" />
+    <ClInclude Include="internal\Game\Gamebryo\NiCriticalSection.hpp" />
     <ClInclude Include="internal\Game\Gamebryo\NiDX9Renderer.hpp" />
+    <ClInclude Include="internal\Game\Gamebryo\NiRefObject.hpp" />
+    <ClInclude Include="internal\Game\Gamebryo\NiRenderer.hpp" />
+    <ClInclude Include="internal\Game\Gamebryo\NiSmartPointer.hpp" />
+    <ClInclude Include="internal\GeometryPrecacheQueue.hpp" />
     <ClInclude Include="internal\INIUtils.hpp" />
     <ClInclude Include="internal\ThreadingTweaks.hpp" />
     <ClInclude Include="internal\D3DHooks.hpp" />

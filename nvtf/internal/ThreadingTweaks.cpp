@@ -1,4 +1,5 @@
 #include "ThreadingTweaks.hpp"
+#include "GeometryPrecacheQueue.hpp"
 
 namespace ThreadingTweaks {
 
@@ -110,10 +111,15 @@ namespace ThreadingTweaks {
 
 	void ReplaceGeometryPrecacheLocks() {
 		// NiDX9Renderer::PerformPrecache
-		if (Setting::ucReplaceGeometryPrecacheLocks) {
+		switch (Setting::ucReplaceGeometryPrecacheLocks) {
+		case 0:
 			SafeWrite16(0xE74126, 0xBE90);
 			SafeWrite32(0xE74128, (uintptr_t)EnterCriticalSectionRendererHook);
-		}
+			break;
+		default: [[likely]]
+			GeometryPrecacheQueue::InitHooks();
+			break;
+		};
 	}
 
 	void TweakMiscCriticalSections() {
