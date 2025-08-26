@@ -8,7 +8,7 @@
 #include <internal/TickFix.hpp>
 
 constexpr uint32_t		MIN_NVSE_VERSION = PACKED_NVSE_VERSION;
-constexpr uint32_t		PLUGIN_VERSION = 10;
+constexpr uint32_t		PLUGIN_VERSION = 1061;
 constexpr const char*	PLUGIN_NAME = "NVTF";
 constexpr const char*	PLUGIN_FULL_NAME = "New Vegas Tick Fix";
 
