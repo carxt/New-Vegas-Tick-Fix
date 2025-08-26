@@ -4,6 +4,7 @@
 
 WaitLock				                            GeometryPrecacheQueue::kQueueLock;
 std::queue<GeometryPrecacheQueue::QueuedObject>     GeometryPrecacheQueue::kQueue;
+std::vector<NiPointer<NiRefObject>>					GeometryPrecacheQueue::kActiveObjects;
 HANDLE 												GeometryPrecacheQueue::hThread;
 HANDLE												GeometryPrecacheQueue::hTaskEvent;
 HANDLE												GeometryPrecacheQueue::hPauseEvent;
@@ -82,11 +83,14 @@ DWORD __stdcall GeometryPrecacheQueue::ThreadProc(LPVOID lpThreadParameter) {
 			WaitForSingleObject(hTaskEvent, INFINITE);
 
 			bIsEmpty = kQueue.empty();
+			if (!bIsEmpty)
+				kActiveObjects.reserve(kQueue.size());
+			
 			while (!bIsEmpty && WaitForSingleObject(hPauseEvent, INFINITE) == WAIT_OBJECT_0) {
-				auto& rData = kQueue.front();
-				pRenderer->PrecacheGeometryEx(rData.spGeometry, rData.uiBonesPerPartition, rData.uiBonesPerVertex, rData.pShaderDeclaration);
-
 				kQueueLock.Lock();
+				auto& rData = kQueue.front();
+				kActiveObjects.push_back(rData.spGeometry);
+				pRenderer->PrecacheGeometryEx(rData.spGeometry, rData.uiBonesPerPartition, rData.uiBonesPerVertex, rData.pShaderDeclaration);
 				kQueue.pop();
 				bIsEmpty = kQueue.empty();
 				kQueueLock.Unlock();
@@ -94,6 +98,9 @@ DWORD __stdcall GeometryPrecacheQueue::ThreadProc(LPVOID lpThreadParameter) {
 
 			if (uiPrecacheCount && WaitForSingleObject(hPauseEvent, INFINITE) == WAIT_OBJECT_0)
 				PerformPrecache_ST(pRenderer);
+
+			kActiveObjects.clear();
+			kActiveObjects.shrink_to_fit();
 		}
 	}
 
