@@ -26,9 +26,10 @@ private:
 	static HANDLE hTaskEvent;
 	static HANDLE hPauseEvent;
 
-	static WaitLock					 kQueueLock;
-	static std::queue<QueuedObject>  kQueue;
-	static HANDLE 					 hThread;
+	static WaitLock								kQueueLock;
+	static std::queue<QueuedObject>				kQueue;
+	static std::vector<NiPointer<NiRefObject>>	kActiveObjects;
+	static HANDLE 								hThread;
 
 	void StartProcessing();
 	void StopProcessing();
