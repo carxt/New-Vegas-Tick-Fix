@@ -6,7 +6,8 @@
 #include <internal/ThreadingTweaks.hpp>
 #include <internal/FastExit.hpp>
 #include <internal/TickFix.hpp>
-
+#include <internal/MiscHooks.hpp>
+#include <internal/Common/CommonUtils.hpp>
 constexpr uint32_t		MIN_NVSE_VERSION = PACKED_NVSE_VERSION;
 constexpr uint32_t		PLUGIN_VERSION = 1061;
 constexpr const char*	PLUGIN_NAME = "NVTF";
@@ -22,6 +23,7 @@ namespace Main {
 		bool bEnableThreadingTweaks	= false;
 		bool bModifyDirectXBehavior	= true;
 		bool bRedoHashtables		= false;
+		bool bMiscHooks				= false;
 	}
 
 	bool ReadINI(const char* iniPath) {
@@ -39,6 +41,8 @@ namespace Main {
 		Setting::bEnableThreadingTweaks		= GetPrivateProfileInt("Main", "bEnableThreadingTweaks", 0, iniPath);
 		Setting::bModifyDirectXBehavior		= GetPrivateProfileInt("Main", "bModifyDirectXBehavior", 0, iniPath);
 		Setting::bRedoHashtables			= GetPrivateProfileInt("Main", "bRedoHashtables", 0, iniPath);
+		Setting::bMiscHooks					= GetPrivateProfileInt("Main", "bMiscHooks", 0, iniPath);
+
 
 		if (!Setting::bGTCFix && !Setting::bFastExit && !Setting::bEnableThreadingTweaks && !Setting::bModifyDirectXBehavior && !Setting::bRedoHashtables) [[unlikely]]
 			return false;
@@ -47,6 +51,7 @@ namespace Main {
 		HashTables::ReadINI(iniPath);
 		ThreadingTweaks::ReadINI(iniPath);
 		D3DHooks::ReadINI(iniPath);
+		MiscHooks::ReadINI(iniPath);
 		return true;
 	}
 
@@ -65,6 +70,8 @@ namespace Main {
 
 		if (Setting::bGTCFix) [[likely]]
 			TickFix::InitHooks();
+		if (Setting::bMiscHooks) [[likely]]
+			MiscHooks::InitHooks();
 	}
 
 	void InitEarlyHooks() {
@@ -111,7 +118,7 @@ EXTERN_DLL_EXPORT bool NVSEPlugin_Load(const NVSEInterface* nvse) {
 
 	if (Main::bINIRead) [[likely]]
 		Main::InitHooks();
-
+	((NVSEMessagingInterface*)nvse->QueryInterface(NVSEInterface::kInterface_Messaging))->RegisterListener(nvse->GetPluginHandle(), "NVSE", (NVSEMessagingInterface::EventCallback) CommonUtils::NVSEMessageHandler);
 	return true;
 }
 
