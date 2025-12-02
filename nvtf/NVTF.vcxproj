@@ -129,11 +129,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\SafeWrite\SafeWrite.cpp" />
+    <ClCompile Include="internal\Common\CommonUtils.cpp" />
     <ClCompile Include="internal\FastExit.cpp" />
     <ClCompile Include="internal\Game\Bethesda\BGSSaveLoadGame.cpp" />
     <ClCompile Include="internal\Game\Bethesda\bhkWorld.cpp" />
     <ClCompile Include="internal\Game\Bethesda\BSTimer.cpp" />
     <ClCompile Include="internal\Game\Bethesda\Interface.cpp" />
+    <ClCompile Include="internal\Game\Bethesda\MemoryLevelManager.cpp" />
     <ClCompile Include="internal\Game\Bethesda\StartMenu.cpp" />
     <ClCompile Include="internal\Game\Bethesda\TESMain.cpp" />
     <ClCompile Include="internal\Game\Bethesda\TimeGlobal.cpp" />
@@ -141,6 +143,7 @@
     <ClCompile Include="internal\Game\Gamebryo\NiRenderer.cpp" />
     <ClCompile Include="internal\GeometryPrecacheQueue.cpp" />
     <ClCompile Include="internal\INIUtils.cpp" />
+    <ClCompile Include="internal\MiscHooks.cpp" />
     <ClCompile Include="internal\ThreadingTweaks.cpp" />
     <ClCompile Include="internal\D3DHooks.cpp" />
     <ClCompile Include="internal\TickFix.cpp" />
@@ -152,11 +155,14 @@
     <ClInclude Include="..\nvse\PluginAPI.h" />
     <ClInclude Include="..\shared\Defines.hpp" />
     <ClInclude Include="..\shared\SafeWrite\SafeWrite.hpp" />
+    <ClInclude Include="internal\Common\CommonUtils.hpp" />
     <ClInclude Include="internal\FastExit.hpp" />
     <ClInclude Include="internal\Game\Bethesda\BGSSaveLoadGame.hpp" />
     <ClInclude Include="internal\Game\Bethesda\bhkWorld.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\BSCriticalSection.hpp" />
     <ClInclude Include="internal\Game\Bethesda\BSTimer.hpp" />
     <ClInclude Include="internal\Game\Bethesda\Interface.hpp" />
+    <ClInclude Include="internal\Game\Bethesda\MemoryLevelManager.hpp" />
     <ClInclude Include="internal\Game\Bethesda\StartMenu.hpp" />
     <ClInclude Include="internal\Game\Bethesda\TESMain.hpp" />
     <ClInclude Include="internal\Game\Bethesda\TimeGlobal.hpp" />
@@ -167,6 +173,7 @@
     <ClInclude Include="internal\Game\Gamebryo\NiSmartPointer.hpp" />
     <ClInclude Include="internal\GeometryPrecacheQueue.hpp" />
     <ClInclude Include="internal\INIUtils.hpp" />
+    <ClInclude Include="internal\MiscHooks.hpp" />
     <ClInclude Include="internal\ThreadingTweaks.hpp" />
     <ClInclude Include="internal\D3DHooks.hpp" />
     <ClInclude Include="internal\TickFix.hpp" />

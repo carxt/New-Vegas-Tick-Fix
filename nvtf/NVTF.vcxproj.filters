@@ -22,6 +22,9 @@
     <Filter Include="shared">
       <UniqueIdentifier>{63b686cf-40e1-4228-acc4-4095f355e584}</UniqueIdentifier>
     </Filter>
+    <Filter Include="internal\Common">
+      <UniqueIdentifier>{3f57fe06-09cc-40d4-9e33-266a31531fd3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -75,6 +78,15 @@
     </ClCompile>
     <ClCompile Include="internal\Game\Gamebryo\NiRenderer.cpp">
       <Filter>internal\Game\Gamebryo</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\MiscHooks.cpp">
+      <Filter>internal\Patches</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Game\Bethesda\MemoryLevelManager.cpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClCompile>
+    <ClCompile Include="internal\Common\CommonUtils.cpp">
+      <Filter>internal\Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -146,6 +158,18 @@
     </ClInclude>
     <ClInclude Include="internal\Game\Gamebryo\NiRefObject.hpp">
       <Filter>internal\Game\Gamebryo</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\MiscHooks.hpp">
+      <Filter>internal\Patches</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\BSCriticalSection.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Game\Bethesda\MemoryLevelManager.hpp">
+      <Filter>internal\Game\Bethesda</Filter>
+    </ClInclude>
+    <ClInclude Include="internal\Common\CommonUtils.hpp">
+      <Filter>internal\Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
